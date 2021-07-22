@@ -1,0 +1,72 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\src\\tools\\omni\\SchoolDistrictBilling\\SchoolDistrictBilling\\SchoolDistrictBilling.csproj": {}
+  },
+  "projects": {
+    "C:\\src\\tools\\omni\\SchoolDistrictBilling\\SchoolDistrictBilling\\SchoolDistrictBilling.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\src\\tools\\omni\\SchoolDistrictBilling\\SchoolDistrictBilling\\SchoolDistrictBilling.csproj",
+        "projectName": "SchoolDistrictBilling",
+        "projectPath": "C:\\src\\tools\\omni\\SchoolDistrictBilling\\SchoolDistrictBilling\\SchoolDistrictBilling.csproj",
+        "packagesPath": "C:\\Users\\Matt.Hensinger\\.nuget\\packages\\",
+        "outputPath": "C:\\src\\tools\\omni\\SchoolDistrictBilling\\SchoolDistrictBilling\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Matt.Hensinger\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net5.0"
+        ],
+        "sources": {
+          "C:\\Epicor\\Prophet21\\Middleware\\19_1_3700\\P21APICodeExamplesSource\\NugetLibrary": {},
+          "C:\\Epicor\\Prophet21\\Middleware\\20_1_3913\\P21APICodeExamplesSource\\NugetLibrary": {},
+          "C:\\Epicor\\Prophet21\\Middleware\\20_2_4129_WD\\P21APICodeExamplesSource\\NugetLibrary": {},
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages": {},
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\src\\p21.application\\packages": {},
+          "https://api.nuget.org/v3/index.json": {},
+          "https://epicor-corp.pkgs.visualstudio.com/_packaging/JMASFeed/nuget/v3/index.json": {},
+          "https://epicor-corp.pkgs.visualstudio.com/_packaging/P21/nuget/v3/index.json": {}
+        },
+        "frameworks": {
+          "net5.0": {
+            "targetAlias": "net5.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net5.0": {
+          "targetAlias": "net5.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.301\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
