@@ -3,27 +3,50 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - SchoolDistrictBilling</title>
+    <title>@ViewData["Title"] - School District Billing</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light border-bottom box-shadow mb-3" style="background-color: #E0C991;">
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">SchoolDistrictBilling</a>
+                @*<a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">OmniVest School District Billing</a>*@
+                <a class="navbar-brand" href="#">
+                    <img src="~/logo.omnivest.png" alt="" width="128" height="32" class="d-inline-block align-text-top">
+                    School District Billing
+                </a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" id="navbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Data Entry
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="navbarDropdown" style="background-color: #E0C991;">
+                                <a class="dropdown-item" asp-area="" asp-controller="CharterSchools" asp-action="Index">Charter School</a>
+                                <a class="dropdown-item" href="#">School District</a>
+                                <a class="dropdown-item" href="#">School District Rates</a>
+                                <a class="dropdown-item" href="#">Student</a>
+                                <a class="dropdown-item" href="#">Payment</a>
+                            </div>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">District Monthly Invoice</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Final Year Reconciliation</a>
+                        </li>
+
+                        @*<li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            </li>*@
                     </ul>
                     <p class="nav navbar-text">@User.Identity.Name</p>
                 </div>
@@ -36,9 +59,9 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2021 - SchoolDistrictBilling - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="border-top footer text-muted" style="background-color: #E0C991;">
+        <div class="container text-center" style="color: #A67B2C;">
+            &copy; 2021 OmniVest Management, Inc. School District Billing
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
