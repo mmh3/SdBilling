@@ -1,0 +1,76 @@
+﻿@model IEnumerable<SchoolDistrictBilling.Models.SchoolDistrictRateView>
+
+@{
+    @* ViewData["Title"] = "School District Rates"; *@
+}
+@* <h1>@ViewData["Title"]</h1> *@
+
+<h2>School District Rates</h2>
+
+<p>
+    <a asp-action="Create">Create New</a>
+    @*<a asp-action="Import" style="text-align:right;">Import</a>*@
+</p>
+
+<form method="post" enctype="multipart/form-data" asp-controller="SchoolDistrictRates" asp-action="Import">
+    <input type="file" name="files" multiple />
+    <input type="submit" value="Upload" />
+</form>
+
+@*TODO: how to pin nav bar to the top, footer to the bottom. Table headers to the top so only the table content scrolls *@
+@* TODO: how to show effective dates without the timestamp *@
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.SchoolDistrict.Aun)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.SchoolDistrict.Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.SchoolDistrict.County)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.SchoolDistrictRate.NonSpedRate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.SchoolDistrictRate.SpedRate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.SchoolDistrictRate.EffectiveDate)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.SchoolDistrict.Aun)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.SchoolDistrict.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.SchoolDistrict.County)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.SchoolDistrictRate.NonSpedRate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.SchoolDistrictRate.SpedRate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.SchoolDistrictRate.EffectiveDate)
+                </td>
+                @*<td>
+                    <a asp-action="Edit" asp-route-id="@item.CharterSchoolUid">Edit</a> |
+                    <a asp-action="Delete" asp-route-id="@item.CharterSchoolUid">Delete</a>
+                </td>*@
+            </tr>
+        }
+    </tbody>
+</table>

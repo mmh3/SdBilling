@@ -10,5 +10,7 @@ namespace SchoolDistrictBilling.Data
         }
 
         public DbSet<CharterSchool> CharterSchools { get; set; }
+        public DbSet<SchoolDistrict> SchoolDistricts { get; set; }
+        public DbSet<SchoolDistrictRate> SchoolDistrictRates { get; set; }
     }
 }

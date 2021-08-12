@@ -9,13 +9,19 @@
     <None Remove="Microsoft.VisualStudio.Web.CodeGeneration.Design" />
     <None Remove="Data\" />
     <None Remove="Views\CharterSchool\" />
+    <None Remove="Views\SchoolDistrictRates\" />
+    <None Remove="Services\" />
+    <None Remove="EPPlus" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MySql.Data.EntityFrameworkCore" Version="8.0.22" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="5.0.2" />
+    <PackageReference Include="EPPlus" Version="4.5.3.3" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Data\" />
     <Folder Include="Views\CharterSchools\" />
+    <Folder Include="Views\SchoolDistrictRates\" />
+    <Folder Include="Services\" />
   </ItemGroup>
 </Project>
