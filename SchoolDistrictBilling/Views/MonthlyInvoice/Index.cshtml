@@ -1,0 +1,50 @@
+﻿@model SchoolDistrictBilling.Models.MonthlyInvoiceView
+
+<h2>Generate Monthly Invoices</h2>
+
+<br />
+
+<form asp-action="Generate" method="post">
+    <div class="row form-group">
+        <label asp-for="CharterSchoolUid" class="col-md-2 col-form-label"></label>
+        <div class="col-md-4">
+
+            @*@Html.DropDownListFor(model => model, new SelectList(Model, "CharterSchoolUid", "Name"), new { @class = "form-control" })*@
+
+
+            <select id="drpSchool" class="form-control" asp-for="CharterSchoolUid" asp-items="@(new SelectList(Model.CharterSchools, "CharterSchoolUid", "Name"))">
+                <option value="">--Select--</option>
+            </select>
+            <input type="hidden" asp-for="CharterSchoolUid" />
+        </div>
+    </div>
+
+    <br />
+    <div class="row form-group">
+        <label asp-for="Month" class="col-md-2 col-form-label"></label>
+        <div class="col-md-2">
+            <select id="drpMonth" class="form-control" asp-for="Month" asp-items="@(new SelectList(Model.Months, Model.CurrentMonth))">
+            </select>
+            <input type="hidden" asp-for="Month" />
+        </div>
+        <div class="col-md-2">
+            <select id="drpYear" class="form-control" asp-for="Year" asp-items="@(new SelectList(Model.Years, Model.CurrentYear))">
+            </select>
+            <input type="hidden" asp-for="Year" />
+        </div>
+    </div>
+
+    <br />
+    <div class="row form-group">
+        <label asp-for="SendTo" class="col-md-2 col-form-label"></label>
+        <div class="col-md-4">
+            <select id="drpSendTo" class="form-control" asp-for="SendTo" asp-items="@(new SelectList(Model.SendToList, "School"))">
+            </select>
+            <input type="hidden" asp-for="SendTo" />
+        </div>
+    </div>
+
+    <div class="row form-group">
+        <input type="submit" value="Generate Invoices" class="btn btn-primary" />
+    </div>
+</form>

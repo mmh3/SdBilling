@@ -70,7 +70,7 @@ namespace SchoolDistrictBilling.Controllers
                 }
             }
 
-            List<SchoolDistrictRateView> rates = ExcelServices.ParseSchoolDistrictRates(_context, fileNames);
+            List<SchoolDistrictRateView> rates = ExcelServices.ImportSchoolDistrictRates(_context, fileNames);
 
 
             /*
