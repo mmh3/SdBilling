@@ -7,6 +7,7 @@ namespace SchoolDistrictBilling.Models
     [Table("student")]
     public class Student
     {
+        //test comment
         public Student()
         {
         }
