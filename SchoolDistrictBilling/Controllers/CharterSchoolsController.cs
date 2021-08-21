@@ -117,7 +117,7 @@ namespace SchoolDistrictBilling.Controllers
             return View(charterSchool);
         }
 
-        // POST: Students/Delete/5
+        // POST: CharterSchools/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

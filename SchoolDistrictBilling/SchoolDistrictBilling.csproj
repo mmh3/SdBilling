@@ -13,6 +13,7 @@
     <None Remove="Services\" />
     <None Remove="EPPlus" />
     <None Remove="Views\MonthlyInvoice\" />
+    <None Remove="Views\SchoolDistricts\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MySql.Data.EntityFrameworkCore" Version="8.0.22" />
@@ -26,6 +27,7 @@
     <Folder Include="Services\" />
     <Folder Include="Views\MonthlyInvoice\" />
     <Folder Include="wwwroot\reports\" />
+    <Folder Include="Views\SchoolDistricts\" />
   </ItemGroup>
   <ItemGroup>
     <Content Remove="wwwroot\reports\" />
