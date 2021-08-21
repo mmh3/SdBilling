@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -163,35 +164,46 @@ namespace SchoolDistrictBilling.Services
                     string headerDateRange = "For the Months of July " + criteria.Year + " to " + criteria.Month + " " + criteria.Year;
                     string currentDate = DateTime.Now.Date.ToString("MM/dd/yyyy");
 
-                    //Replce header information
+                    // Replace header information
                     invoiceSheet.Cells["H1"].Value = charterSchoolName;
                     studentSheet.Cells["F1"].Value = charterSchoolName;
-                    //TODO: What the heck is wrong with H4??? Why does it not set sometimes...
                     invoiceSheet.Cells["H4"].Value = headerDateRange;
                     studentSheet.Cells["F4"].Value = headerDateRange;
-                    //TODO: format these without time
                     invoiceSheet.Cells["N6"].Value = currentDate;
                     invoiceSheet.Cells["N7"].Value = currentDate;
                     invoiceSheet.Cells["N8"].Value = string.Empty;
                     studentSheet.Cells["K6"].Value = currentDate;
 
-                    //Get the list of school districts we'll be billing - this will dictate the number of reports we're creating
+                    // Get the list of school districts we'll be billing - this will dictate the number of reports we're creating
                     var schoolDistricts = context.Students.Where(s => s.CharterSchoolUid == criteria.CharterSchoolUid)
                                                           .Select(x => x.Aun)
                                                           .Distinct().ToList();
 
-                    //Select all students for this charter school
-                    //var students = context.Students.Where(s => s.CharterSchoolUid == criteria.CharterSchoolUid)
-                    //    .OrderBy(x => x.Aun).ThenBy(x => x.Grade).ThenBy(x => x.LastName).ThenBy(x => x.FirstName);
-
                     foreach (var aun in schoolDistricts)
                     {
-                        string schoolDistrictName = context.SchoolDistricts.Where(sd => sd.Aun == aun).FirstOrDefault().Name;
+                        var schoolDistrict = context.SchoolDistricts.Where(sd => sd.Aun == aun).FirstOrDefault();
+                        var schoolDistrictName = schoolDistrict.Name;
 
+                        // Set school district information
                         invoiceSheet.Cells["A6"].Value = aun;
                         studentSheet.Cells["B5"].Value = aun;
                         invoiceSheet.Cells["A7"].Value = schoolDistrictName;
                         studentSheet.Cells["B6"].Value = schoolDistrictName;
+
+                        // Select all students for this charter school and school district.
+                        var students = context.Students.Where(s => s.CharterSchoolUid == criteria.CharterSchoolUid && s.Aun == aun)
+                            .OrderBy(x => x.Grade).ThenBy(x => x.LastName).ThenBy(x => x.FirstName);
+
+                        // Get the school district billing rate record for this school district.
+
+                        var schoolDistrictRate = context.SchoolDistrictRates.Where(r => r.SchoolDistrictUid == schoolDistrict.SchoolDistrictUid)
+                            .OrderByDescending(x => x.EffectiveDate).FirstOrDefault();
+
+                        PopulateInvoiceMonthlyAmounts(criteria, invoiceSheet, students.ToList(), schoolDistrictRate);
+
+                        // Add a new student row to the student template.
+                        //studentSheet.Cells["B40:K43"].Copy(studentSheet.Cells["B44:K47"]);
+                        studentSheet.Cells[40, 2, 43, 11].Copy(studentSheet.Cells[44, 2, 47, 11]);
 
                         SaveExcelFile(ReportType.Invoice, invoice, rootPath, criteria, charterSchoolName, schoolDistrictName);
                         SaveExcelFile(ReportType.Student, student, rootPath, criteria, charterSchoolName, schoolDistrictName);
@@ -200,6 +212,119 @@ namespace SchoolDistrictBilling.Services
 
                 return Directory.EnumerateFiles(GetReportPath(rootPath, criteria, charterSchoolName));
             }
+        }
+
+        private static void PopulateInvoiceMonthlyAmounts(MonthlyInvoiceView criteria, ExcelWorksheet sheet, List<Student> students, SchoolDistrictRate rate)
+        {
+            int invoiceMonth = DateTime.ParseExact(criteria.Month, "MMMM", CultureInfo.CurrentCulture).Month;
+            List<int> invoiceMonths = new List<int>() { 7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5 };
+
+            int monthIndex = invoiceMonths.IndexOf(invoiceMonth);
+            for (int i = 0; i <= monthIndex; i++)
+            {
+                PopulateInvoiceMonthAmount(sheet, students, rate, invoiceMonths[i], Int32.Parse(criteria.Year));
+            }
+        }
+
+        private static void PopulateInvoiceMonthAmount(ExcelWorksheet sheet, List<Student> students, SchoolDistrictRate rate, int month, int year)
+        {
+            decimal nonSpedTotal = 0;
+            decimal spedTotal = 0;
+            DateTime firstDayOfMonth = new DateTime(year, month, 1);
+            DateTime lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+
+            foreach (var student in students)
+            {
+                if (student.DistrictEntryDate <= firstDayOfMonth &&
+                    (student.ExitDate == null || student.ExitDate >= lastDayOfMonth))
+                {
+                    // If the student attended this school for the whole month, just take district rate / 12.
+                    // TODO: Is sped flag the same as IEP flag or they're different?
+                    if (student.IepFlag == "Y")
+                    {
+                        spedTotal += (rate.SpedRate / 12);
+                    }
+                    else
+                    {
+                        nonSpedTotal += (rate.NonSpedRate / 12);
+                    }
+                }
+                else
+                {
+                    // TODO: If the student enrolled or exited mid-month, need to prorate the amount.
+
+                }
+            }
+
+            sheet.Cells[GetInvoiceMonthCell(month, false)].Value = nonSpedTotal;
+            sheet.Cells[GetInvoiceMonthCell(month, true)].Value = spedTotal;
+        }
+
+        private static string GetInvoiceMonthCell(int month, bool specialEducation)
+        {
+            string cell = string.Empty;
+
+            switch (month)
+            {
+                case 7:
+                    cell = "B";
+                    break;
+
+                case 8:
+                    cell = "C";
+                    break;
+
+                case 9:
+                    cell = "D";
+                    break;
+
+                case 10:
+                    cell = "E";
+                    break;
+
+                case 11:
+                    cell = "F";
+                    break;
+
+                case 12:
+                    cell = "G";
+                    break;
+
+                case 1:
+                    cell = "H";
+                    break;
+
+                case 2:
+                    cell = "I";
+                    break;
+
+                case 3:
+                    cell = "J";
+                    break;
+
+                case 4:
+                    cell = "K";
+                    break;
+
+                case 5:
+                    cell = "L";
+                    break;
+
+                default:
+                    throw new Exception("No cell for May on the Monthly Invoice Template");
+            }
+
+
+            if (specialEducation)
+            {
+                cell += "13";
+            }
+            else
+            {
+                cell += "12";
+            }
+
+            return cell;
         }
 
         private static void SaveExcelFile(ReportType type, ExcelPackage excel, string rootPath, MonthlyInvoiceView criteria, string charterSchoolName, string schoolDistrictName)

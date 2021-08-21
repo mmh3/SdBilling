@@ -71,24 +71,6 @@ namespace SchoolDistrictBilling.Controllers
             }
 
             List<SchoolDistrictRateView> rates = ExcelServices.ImportSchoolDistrictRates(_context, fileNames);
-
-
-            /*
-            //TODO: Give a way to specify which account a file goes with.
-
-            // process uploaded files
-
-            // Create the result Excel file
-            string outputFileName = hostEnvironment.WebRootPath + "/files/BudgetTransactions.xlsx";
-            ExcelServices.CreateOutputTransactionFile(transactionFiles, outputFileName);
-
-            // Don't rely on or trust the FileName property without validation.
-
-            //return Ok(new { count = files.Count, size, filePaths });
-            return Ok(new { inputFileCount = transactionFiles.Count, result = outputFileName });
-            //return View(); //had to move Index.cshtml to shared to make this work. Is there a better way this should be done? RedirectToAction or something like that?
-            */
-
             List<SchoolDistrict> schoolDistricts = await _context.SchoolDistricts.ToListAsync();
             List<SchoolDistrictRate> schoolDistrictRates = await _context.SchoolDistrictRates.ToListAsync();
 

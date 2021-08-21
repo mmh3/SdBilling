@@ -7,11 +7,6 @@
 
 <h2>School District Rates</h2>
 
-<p>
-    <a asp-action="Create">Create New</a>
-    @*<a asp-action="Import" style="text-align:right;">Import</a>*@
-</p>
-
 <form method="post" enctype="multipart/form-data" asp-controller="SchoolDistrictRates" asp-action="Import">
     <input type="file" name="files" multiple />
     <input type="submit" value="Upload" />
@@ -66,10 +61,10 @@
                 <td>
                     @Html.DisplayFor(modelItem => item.SchoolDistrictRate.EffectiveDate)
                 </td>
-                @*<td>
-                    <a asp-action="Edit" asp-route-id="@item.CharterSchoolUid">Edit</a> |
-                    <a asp-action="Delete" asp-route-id="@item.CharterSchoolUid">Delete</a>
-                </td>*@
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.SchoolDistrictRate.SchoolDistrictRateUid">Edit</a> |
+                    <a asp-action="Delete" asp-route-id="@item.SchoolDistrictRate.SchoolDistrictRateUid">Delete</a>
+                </td>
             </tr>
         }
     </tbody>

@@ -11,6 +11,7 @@ namespace SchoolDistrictBilling.Models
         {
         }
 
+        [Column("student_uid")]
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Required]
@@ -58,7 +59,7 @@ namespace SchoolDistrictBilling.Models
         public DateTime DistrictEntryDate { get; set; }
 
         [Column("exit_date")]
-        public DateTime ExitDate { get; set; }
+        public DateTime? ExitDate { get; set; }
 
         [Column("sped_flag")]
         [StringLength(1)]
@@ -69,10 +70,10 @@ namespace SchoolDistrictBilling.Models
         public string IepFlag { get; set; }
 
         [Column("current_iep_date")]
-        public DateTime CurrentIepDate { get; set; }
+        public DateTime? CurrentIepDate { get; set; }
 
         [Column("prior_iep_date")]
-        public DateTime PriorIepDate { get; set; }
+        public DateTime? PriorIepDate { get; set; }
 
         [Column("charter_school_uid")]
         [Required]
