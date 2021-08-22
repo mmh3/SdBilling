@@ -1,0 +1,19 @@
+﻿@model SchoolDistrictBilling.Models.StudentView
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<h3>Are you sure you want to delete @Html.DisplayFor(model => model.Student.FirstName) @Html.DisplayFor(model => model.Student.LastName)?</h3>
+<div>
+    <br />
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Student.StudentUid" />
+        <input type="submit" value="Delete" class="btn btn-danger" />
+    </form>
+</div>
+
+<br />
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>

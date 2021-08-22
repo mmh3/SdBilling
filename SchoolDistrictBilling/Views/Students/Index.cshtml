@@ -1,0 +1,62 @@
+﻿@model IEnumerable<SchoolDistrictBilling.Models.StudentView>
+
+@{
+    @* ViewData["Title"] = "Students"; *@
+}
+@* <h1>@ViewData["Title"]</h1> *@
+
+<h2>Students</h2>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Student.StudentUid)
+            </th>
+            <th>
+                @*@Html.DisplayNameFor(model => model.CharterSchool.Name)*@
+                Charter School
+            </th>
+            <th>
+                @*@Html.DisplayNameFor(model => model.SchoolDistrict.Name)*@
+                School District
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Student.LastName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Student.FirstName)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Student.StudentUid)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CharterSchool.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.SchoolDistrict.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Student.LastName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Student.FirstName)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Student.StudentUid">Edit</a> |
+                <a asp-action="Delete" asp-route-id="@item.Student.StudentUid">Delete</a>
+            </td>
+        </tr>
+        }
+    </tbody>
+</table>

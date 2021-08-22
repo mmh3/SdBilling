@@ -1,0 +1,104 @@
+﻿@model SchoolDistrictBilling.Models.StudentView
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h2>Edit Student</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <input type="hidden" asp-for="Student.StudentUid" />
+            <input type="hidden" asp-for="CharterSchool.CharterSchoolUid" />
+            <input type="hidden" asp-for="CharterSchool.Name" />
+            <input type="hidden" asp-for="SchoolDistrict.SchoolDistrictUid" />
+            <input type="hidden" asp-for="SchoolDistrict.Name" />
+            <input type="hidden" asp-for="SchoolDistrict.Aun" />
+            <input type="hidden" asp-for="SchoolDistrict.County" />
+
+            <div class="form-group">
+                <label asp-for="Student.StateStudentNo" class="control-label"></label>
+                <input asp-for="Student.StateStudentNo" class="form-control" />
+                <span asp-validation-for="Student.StateStudentNo" class="text-danger"></span>
+
+                <label asp-for="Student.FirstName" class="control-label"></label>
+                <input asp-for="Student.FirstName" class="form-control" />
+                <span asp-validation-for="Student.FirstName" class="text-danger"></span>
+
+                <label asp-for="Student.LastName" class="control-label"></label>
+                <input asp-for="Student.LastName" class="form-control" />
+                <span asp-validation-for="Student.LastName" class="text-danger"></span>
+
+                <label asp-for="Student.CharterSchoolUid" class="control-label"></label>
+                <input asp-for="Student.CharterSchoolUid" class="form-control" />
+                <span asp-validation-for="Student.CharterSchoolUid" class="text-danger"></span>
+
+                <label asp-for="Student.Aun" class="control-label"></label>
+                <input asp-for="Student.Aun" class="form-control" />
+                <span asp-validation-for="Student.Aun" class="text-danger"></span>
+
+                <label asp-for="Student.AddressStreet" class="control-label"></label>
+                <input asp-for="Student.AddressStreet" class="form-control" />
+                <span asp-validation-for="Student.AddressStreet" class="text-danger"></span>
+
+                <label asp-for="Student.AddressCity" class="control-label"></label>
+                <input asp-for="Student.AddressCity" class="form-control" />
+                <span asp-validation-for="Student.AddressCity" class="text-danger"></span>
+
+                <label asp-for="Student.AddressState" class="control-label"></label>
+                <input asp-for="Student.AddressState" class="form-control" />
+                <span asp-validation-for="Student.AddressState" class="text-danger"></span>
+
+                <label asp-for="Student.AddressZip" class="control-label"></label>
+                <input asp-for="Student.AddressZip" class="form-control" />
+                <span asp-validation-for="Student.AddressZip" class="text-danger"></span>
+
+                <label asp-for="Student.Dob" class="control-label"></label>
+                <input asp-for="Student.Dob" class="form-control" />
+                <span asp-validation-for="Student.Dob" class="text-danger"></span>
+
+                <label asp-for="Student.Grade" class="control-label"></label>
+                <input asp-for="Student.Grade" class="form-control" />
+                <span asp-validation-for="Student.Grade" class="text-danger"></span>
+
+                <label asp-for="Student.DistrictEntryDate" class="control-label"></label>
+                <input asp-for="Student.DistrictEntryDate" class="form-control" />
+                <span asp-validation-for="Student.DistrictEntryDate" class="text-danger"></span>
+
+                <label asp-for="Student.ExitDate" class="control-label"></label>
+                <input asp-for="Student.ExitDate" class="form-control" />
+                <span asp-validation-for="Student.ExitDate" class="text-danger"></span>
+
+                <label asp-for="Student.SpedFlag" class="control-label"></label>
+                <input asp-for="Student.SpedFlag" class="form-control" />
+                <span asp-validation-for="Student.SpedFlag" class="text-danger"></span>
+
+                <label asp-for="Student.IepFlag" class="control-label"></label>
+                <input asp-for="Student.IepFlag" class="form-control" />
+                <span asp-validation-for="Student.IepFlag" class="text-danger"></span>
+
+                <label asp-for="Student.CurrentIepDate" class="control-label"></label>
+                <input asp-for="Student.CurrentIepDate" class="form-control" />
+                <span asp-validation-for="Student.CurrentIepDate" class="text-danger"></span>
+
+                <label asp-for="Student.PriorIepDate" class="control-label"></label>
+                <input asp-for="Student.PriorIepDate" class="form-control" />
+                <span asp-validation-for="Student.PriorIepDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
