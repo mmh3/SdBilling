@@ -13,5 +13,7 @@ namespace SchoolDistrictBilling.Data
         public DbSet<SchoolDistrict> SchoolDistricts { get; set; }
         public DbSet<SchoolDistrictRate> SchoolDistrictRates { get; set; }
         public DbSet<Student> Students { get; set; }
+        public DbSet<CharterSchoolSchedule> CharterSchoolSchedules { get; set; }
+        public DbSet<CharterSchoolScheduleDate> CharterSchoolScheduleDates { get; set; }
     }
 }
