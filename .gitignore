@@ -365,3 +365,5 @@ FodyWeavers.xsd
 SchoolDistrictBilling/wwwroot/reportTemplates/.DS_Store
 SchoolDistrictBilling/wwwroot/reports/
 SchoolDistrictBilling/wwwroot/temp/
+SchoolDistrictBilling/wwwroot/archive.zip
+SchoolDistrictBilling/wwwroot/reportTemplates/MonthlyIndividualStudent_oldFromPde.xlsx
