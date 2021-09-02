@@ -304,8 +304,6 @@ namespace SchoolDistrictBilling.Controllers
             
             _context.Add(date);
             await _context.SaveChangesAsync();
-            // Makes sure to refresh the _context with the new date so it's available to be removed immediately.
-            //await _context.Entry(date).ReloadAsync();
 
             //TODO: what should this be?
             var message = string.Empty;
@@ -318,7 +316,7 @@ namespace SchoolDistrictBilling.Controllers
         {
             try
             {
-                //var date = _context.CharterSchoolScheduleDates.Find(evt.EventId);
+                //Do a retrieve to make sure we're getting the latest from the DB.
                 var date = _context.CharterSchoolScheduleDates.Where(d => d.CharterSchoolScheduleDateUid == evt.EventId).ToList().FirstOrDefault();
 
                 _context.CharterSchoolScheduleDates.Remove(date);
