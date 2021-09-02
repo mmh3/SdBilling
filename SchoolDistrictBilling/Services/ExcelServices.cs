@@ -12,9 +12,7 @@ namespace SchoolDistrictBilling.Services
 {
     public class ExcelServices
     {
-        public ExcelServices()
-        {
-        }
+        public ExcelServices() { }
 
         public static List<SchoolDistrictRateView> ImportSchoolDistrictRates(AppDbContext context, List<string> fileNames)
         {
@@ -200,6 +198,7 @@ namespace SchoolDistrictBilling.Services
                             .OrderByDescending(x => x.EffectiveDate).FirstOrDefault();
 
                         PopulateInvoiceMonthlyAmounts(criteria, invoiceSheet, students.ToList(), schoolDistrictRate);
+                        PopulateAdm(invoiceSheet, schoolDistrictRate);
 
                         // Add a new student row to the student template.
                         //studentSheet.Cells["B40:K43"].Copy(studentSheet.Cells["B44:K47"]);
@@ -214,6 +213,12 @@ namespace SchoolDistrictBilling.Services
             }
         }
 
+        private static void PopulateAdm(ExcelWorksheet sheet, SchoolDistrictRate rate)
+        {
+            sheet.Cells["M12"].Value = rate.NonSpedRate;
+            sheet.Cells["M13"].Value = rate.SpedRate;
+        }
+
         private static void PopulateInvoiceMonthlyAmounts(MonthlyInvoiceView criteria, ExcelWorksheet sheet, List<Student> students, SchoolDistrictRate rate)
         {
             int invoiceMonth = DateTime.ParseExact(criteria.Month, "MMMM", CultureInfo.CurrentCulture).Month;
@@ -222,8 +227,44 @@ namespace SchoolDistrictBilling.Services
             int monthIndex = invoiceMonths.IndexOf(invoiceMonth);
             for (int i = 0; i <= monthIndex; i++)
             {
-                PopulateInvoiceMonthAmount(sheet, students, rate, invoiceMonths[i], Int32.Parse(criteria.Year));
+                //PopulateInvoiceMonthAmount(sheet, students, rate, invoiceMonths[i], Int32.Parse(criteria.Year));
+                PopulateInvoiceMonthlyStudents(sheet, students, invoiceMonths[i], Int32.Parse(criteria.Year));
             }
+        }
+
+        private static void PopulateInvoiceMonthlyStudents(ExcelWorksheet sheet, List<Student> students, int month, int year)
+        {
+            decimal nonSpedStudents = 0;
+            decimal spedStudents = 0;
+            DateTime firstDayOfMonth = new DateTime(year, month, 1);
+            DateTime lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+
+            foreach (var student in students)
+            {
+                if (student.DistrictEntryDate <= firstDayOfMonth &&
+                    (student.ExitDate == null || student.ExitDate >= lastDayOfMonth))
+                {
+                    // If the student attended this school for the whole month, they're a full student.
+                    // TODO: Is sped flag the same as IEP flag or they're different?
+                    if (student.IepFlag == "Y")
+                    {
+                        spedStudents += 1;
+                    }
+                    else
+                    {
+                        nonSpedStudents += 1;
+                    }
+                }
+                else
+                {
+                    // TODO: If the student enrolled or exited mid-month, need to prorate their enrollment
+                    // for the actual days they attended.
+
+                }
+            }
+
+            sheet.Cells[GetInvoiceMonthCell(month, false)].Value = nonSpedStudents;
+            sheet.Cells[GetInvoiceMonthCell(month, true)].Value = spedStudents;
         }
 
         private static void PopulateInvoiceMonthAmount(ExcelWorksheet sheet, List<Student> students, SchoolDistrictRate rate, int month, int year)
