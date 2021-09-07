@@ -19,7 +19,6 @@
         </div>
     </div>
 
-    <br />
     <div class="row form-group">
         <label asp-for="Month" class="col-md-2 col-form-label"></label>
         <div class="col-md-2">
@@ -34,7 +33,6 @@
         </div>
     </div>
 
-    <br />
     <div class="row form-group">
         <label asp-for="SendTo" class="col-md-2 col-form-label"></label>
         <div class="col-md-4">
@@ -43,8 +41,50 @@
             <input type="hidden" asp-for="SendTo" />
         </div>
     </div>
+    <div class="row form-group" id="schoolDistrictRow">
+        <label asp-for="SelectedSchoolDistricts" class="col-md-2 col-form-label"></label>
+        <div class="col-md-4">
+            <select id="drpSchoolDistrict" class="form-control" asp-for="SelectedSchoolDistricts" multiple>
+            </select>
+            <input type="hidden" asp-for="SelectedSchoolDistricts" />
+        </div>
+    </div>
 
     <div class="row form-group">
         <input type="submit" value="Generate Invoices" class="btn btn-primary" />
     </div>
 </form>
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#schoolDistrictRow').hide();
+        });
+
+        $('#drpSchool').change(function () {
+            var val = $(this).val();
+            var sdSelect = $('#drpSchoolDistrict');
+            sdSelect.empty();
+
+            $.getJSON('@Url.Action("GetSchoolDistricts")', { charterSchoolUid: val }, function (schoolDistricts) {
+                if (schoolDistricts != null && !jQuery.isEmptyObject(schoolDistricts)) {
+                    /*sdSelect.append($('<option/>', { value: null, text: "" }));*/
+                    $.each(schoolDistricts, function (index, sd) {
+                        //console.log(sd);
+                        sdSelect.append($('<option/>', { value: sd.value, text: sd.text }));
+                    });
+                };
+            });
+        });
+
+        $('#drpSendTo').change(function () {
+            var val = $(this).val();
+            if (val === 'PDE') {
+                $('#schoolDistrictRow').show();
+            }
+            else {
+                $('#schoolDistrictRow').hide();
+            }
+        });
+    </script>
+}

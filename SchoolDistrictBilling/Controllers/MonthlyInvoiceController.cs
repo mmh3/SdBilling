@@ -9,6 +9,7 @@ using SchoolDistrictBilling.Services;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace SchoolDistrictBilling.Controllers
 {
@@ -29,6 +30,22 @@ namespace SchoolDistrictBilling.Controllers
             List<CharterSchool> charterSchools = await _context.CharterSchools.ToListAsync();
 
             return View(new MonthlyInvoiceView(charterSchools));
+        }
+
+        [HttpGet]
+        public IActionResult GetSchoolDistricts(int charterSchoolUid)
+        {
+            // Get a list containing one student per school district for the given charter school.
+            var schoolDistrictAuns = _context.Students.Where(s => s.CharterSchoolUid == charterSchoolUid)
+                .Select(s => s.Aun)
+                .Distinct()
+                .ToList();
+
+            // Get a list of the school districts that the given charter school may need to bill.
+            var schoolDistricts = _context.SchoolDistricts.Where(sd => schoolDistrictAuns.Contains(sd.Aun)).ToList();
+            var selectList = new SelectList(schoolDistricts, "Name", "Name");
+
+            return Json(selectList);
         }
 
         // POST: MonthlyInvoice

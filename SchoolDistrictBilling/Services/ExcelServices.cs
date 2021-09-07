@@ -147,13 +147,22 @@ namespace SchoolDistrictBilling.Services
 
         public static IEnumerable<string> GenerateMonthlyInvoice(AppDbContext context, string rootPath, MonthlyInvoiceView criteria)
         {
+            var charterSchoolName = context.CharterSchools.Find(criteria.CharterSchoolUid).Name;
+
+            if (criteria.SendTo == SubmitTo.PDE.ToString())
+            {
+                List<string> files = new List<string>();
+                if (UpdateInvoiceForPde(context, criteria, rootPath, charterSchoolName, out files))
+                {
+                    return files;
+                }
+            }
+
             FileInfo invoiceTemplate = new FileInfo(rootPath + "/reportTemplates/MonthlyInvoice.xlsx");
             FileInfo studentTemplate = new FileInfo(rootPath + "/reportTemplates/MonthlyIndividualStudent.xlsx");
 
             using (ExcelPackage invoice = new ExcelPackage(invoiceTemplate))
             {
-                string charterSchoolName = context.CharterSchools.Find(criteria.CharterSchoolUid).Name;
-
                 using (ExcelPackage student = new ExcelPackage(studentTemplate))
                 {
                     ExcelWorksheet invoiceSheet = invoice.Workbook.Worksheets.FirstOrDefault();
@@ -167,8 +176,19 @@ namespace SchoolDistrictBilling.Services
                     studentSheet.Cells["F1"].Value = charterSchoolName;
                     invoiceSheet.Cells["H4"].Value = headerDateRange;
                     studentSheet.Cells["F4"].Value = headerDateRange;
-                    invoiceSheet.Cells["N6"].Value = currentDate;
-                    invoiceSheet.Cells["N7"].Value = currentDate;
+                    if (criteria.SendTo == "School")
+                    {
+                        invoiceSheet.Cells["N6"].Value = currentDate;
+                        invoiceSheet.Cells["N7"].Value = currentDate;
+                    }
+                    else
+                    {
+                        // If we're generating this invoice straight to PDE and it hasn't been sent to the SD yet,
+                        // set the prep and SD dates to the day before.
+                        invoiceSheet.Cells["N6"].Value = DateTime.Now.Date.AddDays(-1).ToString("MM/dd/yyyy");
+                        invoiceSheet.Cells["N7"].Value = DateTime.Now.Date.AddDays(-1).ToString("MM/dd/yyyy");
+                        invoiceSheet.Cells["N8"].Value = currentDate;
+                    }
                     invoiceSheet.Cells["N8"].Value = string.Empty;
                     studentSheet.Cells["K6"].Value = currentDate;
 
@@ -182,6 +202,12 @@ namespace SchoolDistrictBilling.Services
                         var schoolDistrict = context.SchoolDistricts.Where(sd => sd.Aun == aun).FirstOrDefault();
                         var schoolDistrictName = schoolDistrict.Name;
 
+                        // If we're sending to PDE and we're here, only generate invoices for the selected SDs.
+                        if (criteria.SendTo == "PDE" && !criteria.SelectedSchoolDistricts.Contains(schoolDistrictName))
+                        {
+                            continue;
+                        }
+
                         // Set school district information
                         invoiceSheet.Cells["A6"].Value = aun;
                         studentSheet.Cells["B5"].Value = aun;
@@ -190,19 +216,17 @@ namespace SchoolDistrictBilling.Services
 
                         // Select all students for this charter school and school district.
                         var students = context.Students.Where(s => s.CharterSchoolUid == criteria.CharterSchoolUid && s.Aun == aun)
-                            .OrderBy(x => x.Grade).ThenBy(x => x.LastName).ThenBy(x => x.FirstName);
+                            .OrderBy(x => x.Grade).ThenBy(x => x.LastName).ThenBy(x => x.FirstName).ToList();
+
+                        // Get the list of holidays for this charter school.
+                        var holidays = context.CharterSchoolScheduleDates.ToList();
 
                         // Get the school district billing rate record for this school district.
-
                         var schoolDistrictRate = context.SchoolDistrictRates.Where(r => r.SchoolDistrictUid == schoolDistrict.SchoolDistrictUid)
                             .OrderByDescending(x => x.EffectiveDate).FirstOrDefault();
 
-                        PopulateInvoiceMonthlyAmounts(criteria, invoiceSheet, students.ToList(), schoolDistrictRate);
-                        PopulateAdm(invoiceSheet, schoolDistrictRate);
-
-                        // Add a new student row to the student template.
-                        //studentSheet.Cells["B40:K43"].Copy(studentSheet.Cells["B44:K47"]);
-                        studentSheet.Cells[40, 2, 43, 11].Copy(studentSheet.Cells[44, 2, 47, 11]);
+                        PopulateInvoiceSheet(invoiceSheet, criteria, students, holidays, schoolDistrictRate);
+                        PopulateStudentSheet(studentSheet, students);
 
                         SaveExcelFile(ReportType.Invoice, invoice, rootPath, criteria, charterSchoolName, schoolDistrictName);
                         SaveExcelFile(ReportType.Student, student, rootPath, criteria, charterSchoolName, schoolDistrictName);
@@ -213,13 +237,131 @@ namespace SchoolDistrictBilling.Services
             }
         }
 
+        private static bool UpdateInvoiceForPde(AppDbContext context, MonthlyInvoiceView criteria, string rootPath, string charterSchoolName, out List<string> files)
+        {
+            bool result = false;
+            List<string> fileNames = new List<string>();
+
+            foreach(var sdName in criteria.SelectedSchoolDistricts)
+            {
+                if (!string.IsNullOrEmpty(sdName))
+                {
+                    var invoiceFileName = GetReportFileName(ReportType.Invoice, rootPath, criteria, charterSchoolName, sdName);
+                    if (!File.Exists(invoiceFileName))
+                    {
+                        // If the file doesn't exist, return false so we know we have to generate it now.
+                        files = fileNames;
+                        return false;
+                    }
+
+                    using (ExcelPackage invoice = new ExcelPackage(new FileInfo(invoiceFileName)))
+                    {
+                        ExcelWorksheet invoiceSheet = invoice.Workbook.Worksheets.FirstOrDefault();
+                        invoiceSheet.Cells["N8"].Value = DateTime.Now.Date.ToString("MM/dd/yyyy");
+                        invoice.Save();
+
+                        // Add this invoice and student template to the list of files that were updated.
+                        result = true;
+                        fileNames.Add(invoiceFileName);
+                        fileNames.Add(GetReportFileName(ReportType.Student, rootPath, criteria, charterSchoolName, sdName));
+                    }
+                }
+            }
+
+            files = fileNames;
+            return result;
+        }
+
+        private static void PopulateInvoiceSheet(ExcelWorksheet sheet, MonthlyInvoiceView criteria, List<Student> students, List<CharterSchoolScheduleDate> holidays, SchoolDistrictRate rate)
+        {
+            PopulateInvoiceMonthlyAmounts(criteria, sheet, students, rate, holidays);
+            PopulateAdm(sheet, rate);
+        }
+
+        private static void PopulateStudentSheet(ExcelWorksheet sheet, List<Student> students)
+        {
+            //TODO: this is just for testing for now
+            //for (int j = 0; j < 24; j++)
+            //{
+            //    students.Add(students[0]);
+            //}
+
+            for (int i = 0; i < students.Count(); i++)
+            {
+                AddStudent(sheet, students[i], i);
+            }
+        }
+
+        private static void AddStudent(ExcelWorksheet sheet, Student student, int counter)
+        {
+            // Student data starts at row 12. Each additional student moves down by 4 rows.
+            // After 8, copy the whole sheet over again so add 46 for each sheet.
+            var sheetNum = Math.Floor((decimal)(counter / 8));
+
+            if (counter % 8 == 0)
+            {
+                var copyStartRow = (sheetNum * 46 + 1).ToString();
+                var copyEndRow = (sheetNum * 46 + 93).ToString();
+                sheet.Cells["A1:K46"].Copy(sheet.Cells["A" + copyStartRow + ":K" + copyEndRow]);
+                ClearCopiedSheet(sheet, sheetNum);
+            }
+
+            var row = (sheetNum * 46) + 12 + ((counter % 8) * 4);
+            var firstRow = row.ToString();
+            var secondRow = (row + 1).ToString();
+            var thirdRow = (row + 2).ToString();
+            var fourthRow = (row + 3).ToString();
+
+            sheet.Cells["C" + secondRow].Value = student.StateStudentNo;
+            sheet.Cells["D" +  firstRow].Value = student.FirstName + " " + student.LastName;
+            sheet.Cells["D" + secondRow].Value = student.AddressStreet;
+            sheet.Cells["D" + fourthRow].Value = student.AddressCity + ", " + student.AddressState;
+            sheet.Cells["E" + fourthRow].Value = student.AddressZip;
+            sheet.Cells["F" +  firstRow].Value = student.Dob;
+            sheet.Cells["F" +  thirdRow].Value = student.Grade;
+
+            sheet.Cells["G" + secondRow].Value = ""; //Submitted date
+            sheet.Cells["H" + secondRow].Value = student.DistrictEntryDate;
+            sheet.Cells["I" + secondRow].Value = student.ExitDate;
+            sheet.Cells["J" + secondRow].Value = student.IepFlag == "Y" ? "Yes" : "No";
+            sheet.Cells["K" + secondRow].Value = student.CurrentIepDate;
+            sheet.Cells["K" + fourthRow].Value = student.PriorIepDate;
+        }
+
+        private static void ClearCopiedSheet(ExcelWorksheet sheet, decimal sheetNum)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                var row = (sheetNum * 46) + 12 + ((i % 8) * 4);
+                var firstRow = row.ToString();
+                var secondRow = (row + 1).ToString();
+                var thirdRow = (row + 2).ToString();
+                var fourthRow = (row + 3).ToString();
+
+                sheet.Cells["C" + secondRow].Value = string.Empty;
+                sheet.Cells["D" + firstRow].Value = string.Empty;
+                sheet.Cells["D" + secondRow].Value = string.Empty;
+                sheet.Cells["D" + fourthRow].Value = string.Empty;
+                sheet.Cells["E" + fourthRow].Value = string.Empty;
+                sheet.Cells["F" + firstRow].Value = string.Empty;
+                sheet.Cells["F" + thirdRow].Value = string.Empty;
+
+                sheet.Cells["G" + secondRow].Value = string.Empty;
+                sheet.Cells["H" + secondRow].Value = string.Empty;
+                sheet.Cells["I" + secondRow].Value = string.Empty;
+                sheet.Cells["J" + secondRow].Value = string.Empty;
+                sheet.Cells["K" + secondRow].Value = string.Empty;
+                sheet.Cells["K" + fourthRow].Value = string.Empty;
+            }
+        }
+
         private static void PopulateAdm(ExcelWorksheet sheet, SchoolDistrictRate rate)
         {
             sheet.Cells["M12"].Value = rate.NonSpedRate;
             sheet.Cells["M13"].Value = rate.SpedRate;
         }
 
-        private static void PopulateInvoiceMonthlyAmounts(MonthlyInvoiceView criteria, ExcelWorksheet sheet, List<Student> students, SchoolDistrictRate rate)
+        private static void PopulateInvoiceMonthlyAmounts(MonthlyInvoiceView criteria, ExcelWorksheet sheet, List<Student> students, SchoolDistrictRate rate, List<CharterSchoolScheduleDate> holidays)
         {
             int invoiceMonth = DateTime.ParseExact(criteria.Month, "MMMM", CultureInfo.CurrentCulture).Month;
             List<int> invoiceMonths = new List<int>() { 7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5 };
@@ -227,80 +369,32 @@ namespace SchoolDistrictBilling.Services
             int monthIndex = invoiceMonths.IndexOf(invoiceMonth);
             for (int i = 0; i <= monthIndex; i++)
             {
-                //PopulateInvoiceMonthAmount(sheet, students, rate, invoiceMonths[i], Int32.Parse(criteria.Year));
-                PopulateInvoiceMonthlyStudents(sheet, students, invoiceMonths[i], Int32.Parse(criteria.Year));
+                PopulateInvoiceMonthlyStudents(sheet, students, holidays, invoiceMonths[i], Int32.Parse(criteria.Year));
             }
         }
 
-        private static void PopulateInvoiceMonthlyStudents(ExcelWorksheet sheet, List<Student> students, int month, int year)
+        private static void PopulateInvoiceMonthlyStudents(ExcelWorksheet sheet, List<Student> students, List<CharterSchoolScheduleDate> holidays, int month, int year)
         {
             decimal nonSpedStudents = 0;
             decimal spedStudents = 0;
-            DateTime firstDayOfMonth = new DateTime(year, month, 1);
-            DateTime lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
 
             foreach (var student in students)
             {
-                if (student.DistrictEntryDate <= firstDayOfMonth &&
-                    (student.ExitDate == null || student.ExitDate >= lastDayOfMonth))
+                // TODO: Is sped flag the same as IEP flag or they're different?
+                if (student.IepFlag == "Y")
                 {
-                    // If the student attended this school for the whole month, they're a full student.
-                    // TODO: Is sped flag the same as IEP flag or they're different?
-                    if (student.IepFlag == "Y")
-                    {
-                        spedStudents += 1;
-                    }
-                    else
-                    {
-                        nonSpedStudents += 1;
-                    }
+                    spedStudents += student.GetMonthlyAttendanceValue(month, year, holidays);
                 }
                 else
                 {
-                    // TODO: If the student enrolled or exited mid-month, need to prorate their enrollment
-                    // for the actual days they attended.
-
+                    nonSpedStudents += student.GetMonthlyAttendanceValue(month, year, holidays);
                 }
             }
 
             sheet.Cells[GetInvoiceMonthCell(month, false)].Value = nonSpedStudents;
             sheet.Cells[GetInvoiceMonthCell(month, true)].Value = spedStudents;
         }
-
-        private static void PopulateInvoiceMonthAmount(ExcelWorksheet sheet, List<Student> students, SchoolDistrictRate rate, int month, int year)
-        {
-            decimal nonSpedTotal = 0;
-            decimal spedTotal = 0;
-            DateTime firstDayOfMonth = new DateTime(year, month, 1);
-            DateTime lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
-
-            foreach (var student in students)
-            {
-                if (student.DistrictEntryDate <= firstDayOfMonth &&
-                    (student.ExitDate == null || student.ExitDate >= lastDayOfMonth))
-                {
-                    // If the student attended this school for the whole month, just take district rate / 12.
-                    // TODO: Is sped flag the same as IEP flag or they're different?
-                    if (student.IepFlag == "Y")
-                    {
-                        spedTotal += (rate.SpedRate / 12);
-                    }
-                    else
-                    {
-                        nonSpedTotal += (rate.NonSpedRate / 12);
-                    }
-                }
-                else
-                {
-                    // TODO: If the student enrolled or exited mid-month, need to prorate the amount.
-
-                }
-            }
-
-            sheet.Cells[GetInvoiceMonthCell(month, false)].Value = nonSpedTotal;
-            sheet.Cells[GetInvoiceMonthCell(month, true)].Value = spedTotal;
-        }
-
+        
         private static string GetInvoiceMonthCell(int month, bool specialEducation)
         {
             string cell = string.Empty;
@@ -370,7 +464,17 @@ namespace SchoolDistrictBilling.Services
 
         private static void SaveExcelFile(ReportType type, ExcelPackage excel, string rootPath, MonthlyInvoiceView criteria, string charterSchoolName, string schoolDistrictName)
         {
+            string fileName = GetReportFileName(type, rootPath, criteria, charterSchoolName, schoolDistrictName);
+
+            Directory.CreateDirectory(GetReportPath(rootPath, criteria, charterSchoolName));
+            FileInfo outputFile = new FileInfo(fileName);
+            excel.SaveAs(outputFile);
+        }
+
+        private static string GetReportFileName(ReportType type, string rootPath, MonthlyInvoiceView criteria, string charterSchoolName, string schoolDistrictName)
+        {
             string outputFilePath = GetReportPath(rootPath, criteria, charterSchoolName);
+
             if (type == ReportType.Invoice)
             {
                 outputFilePath = outputFilePath + "/" + criteria.Month + criteria.Year + Regex.Replace(schoolDistrictName, @"\s+", "") + ".xlsx";
@@ -381,14 +485,11 @@ namespace SchoolDistrictBilling.Services
             }
             else
             {
-                throw new Exception("Invalid report type passed to SaveExcelFile.");
+                throw new Exception("Invalid report type passed to GetReportFileName.");
             }
 
-            Directory.CreateDirectory(GetReportPath(rootPath, criteria, charterSchoolName));
-            FileInfo outputFile = new FileInfo(outputFilePath);
-            excel.SaveAs(outputFile);
+            return outputFilePath;
         }
-
         private static string GetReportPath(string rootPath, MonthlyInvoiceView criteria, string charterSchoolName)
         {
             return rootPath + "/reports/" + criteria.Year + "/" + criteria.Month + "/" + Regex.Replace(charterSchoolName, @"\s+", "");
@@ -399,5 +500,11 @@ namespace SchoolDistrictBilling.Services
     {
         Invoice,
         Student
+    }
+
+    enum SubmitTo
+    {
+        SchoolDistrict,
+        PDE
     }
 }

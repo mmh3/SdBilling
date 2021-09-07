@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace SchoolDistrictBilling.Models
 {
@@ -13,6 +15,8 @@ namespace SchoolDistrictBilling.Models
         }
 
         public List<CharterSchool> CharterSchools { get; set; }
+        public List<SchoolDistrict> SchoolDistricts { get; set; }
+        public SelectList SchoolDistrictList { get; set; }
         public List<string> SendToList { get; set; } = new List<string> { "School", "PDE" };
         public List<string> Months { get; set; } = new List<string> { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
         public List<string> Years { get; set; } = new List<string> { "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030" };
@@ -25,5 +29,13 @@ namespace SchoolDistrictBilling.Models
         [Display(Name = "Month")]
         public string Month { get; set; }
         public string Year { get; set; }
+        [BindProperty]
+        [Display(Name = "School District(s)")]
+        public string[] SelectedSchoolDistricts { get; set; }
+
+        public void OnGet()
+        {
+            SchoolDistrictList = new SelectList(SchoolDistricts, nameof(SchoolDistrict.SchoolDistrictUid), nameof(SchoolDistrict.Name));
+        }
     }
 }
