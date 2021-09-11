@@ -148,6 +148,8 @@ namespace SchoolDistrictBilling.Services
         public static IEnumerable<string> GenerateMonthlyInvoice(AppDbContext context, string rootPath, MonthlyInvoiceView criteria)
         {
             var charterSchoolName = context.CharterSchools.Find(criteria.CharterSchoolUid).Name;
+            var headerDateRange = "For the Months of July " + criteria.Year + " to " + criteria.Month + " " + criteria.Year;
+            var currentDateString = DateTime.Now.Date.ToString("MM/dd/yyyy");
 
             if (criteria.SendTo == SubmitTo.PDE.ToString())
             {
@@ -167,19 +169,18 @@ namespace SchoolDistrictBilling.Services
                 {
                     ExcelWorksheet invoiceSheet = invoice.Workbook.Worksheets.FirstOrDefault();
                     ExcelWorksheet studentSheet = student.Workbook.Worksheets.FirstOrDefault();
-
-                    string headerDateRange = "For the Months of July " + criteria.Year + " to " + criteria.Month + " " + criteria.Year;
-                    string currentDate = DateTime.Now.Date.ToString("MM/dd/yyyy");
+                    FileInfo unipayFile = null;
 
                     // Replace header information
                     invoiceSheet.Cells["H1"].Value = charterSchoolName;
                     studentSheet.Cells["F1"].Value = charterSchoolName;
                     invoiceSheet.Cells["H4"].Value = headerDateRange;
                     studentSheet.Cells["F4"].Value = headerDateRange;
+
                     if (criteria.SendTo == "School")
                     {
-                        invoiceSheet.Cells["N6"].Value = currentDate;
-                        invoiceSheet.Cells["N7"].Value = currentDate;
+                        invoiceSheet.Cells["N6"].Value = currentDateString;
+                        invoiceSheet.Cells["N7"].Value = currentDateString;
                     }
                     else
                     {
@@ -187,16 +188,19 @@ namespace SchoolDistrictBilling.Services
                         // set the prep and SD dates to the day before.
                         invoiceSheet.Cells["N6"].Value = DateTime.Now.Date.AddDays(-1).ToString("MM/dd/yyyy");
                         invoiceSheet.Cells["N7"].Value = DateTime.Now.Date.AddDays(-1).ToString("MM/dd/yyyy");
-                        invoiceSheet.Cells["N8"].Value = currentDate;
+                        invoiceSheet.Cells["N8"].Value = currentDateString;
+
+                        unipayFile = GenerateUnipayRequest(criteria, rootPath, charterSchoolName);
                     }
                     invoiceSheet.Cells["N8"].Value = string.Empty;
-                    studentSheet.Cells["K6"].Value = currentDate;
+                    studentSheet.Cells["K6"].Value = currentDateString;
 
                     // Get the list of school districts we'll be billing - this will dictate the number of reports we're creating
                     var schoolDistricts = context.Students.Where(s => s.CharterSchoolUid == criteria.CharterSchoolUid)
                                                           .Select(x => x.Aun)
                                                           .Distinct().ToList();
 
+                    int unipayRow = 10;
                     foreach (var aun in schoolDistricts)
                     {
                         var schoolDistrict = context.SchoolDistricts.Where(sd => sd.Aun == aun).FirstOrDefault();
@@ -228,6 +232,11 @@ namespace SchoolDistrictBilling.Services
                         PopulateInvoiceSheet(invoiceSheet, criteria, students, holidays, schoolDistrictRate);
                         PopulateStudentSheet(studentSheet, students);
 
+                        if (unipayFile != null)
+                        {
+                            AddSchoolToUnipayRequest(unipayFile, invoiceSheet, unipayRow++, schoolDistrict);
+                        }
+
                         SaveExcelFile(ReportType.Invoice, invoice, rootPath, criteria, charterSchoolName, schoolDistrictName);
                         SaveExcelFile(ReportType.Student, student, rootPath, criteria, charterSchoolName, schoolDistrictName);
                     }
@@ -237,11 +246,52 @@ namespace SchoolDistrictBilling.Services
             }
         }
 
+        private static FileInfo GenerateUnipayRequest(MonthlyInvoiceView criteria, string rootPath, string charterSchoolName)
+        {
+            FileInfo unipayRequestFile = null;
+            FileInfo unipayTemplate = new FileInfo(rootPath + "/reportTemplates/MonthlyUnipayRequest.xlsx");
+            var headerDateRange = "For the Months of July " + criteria.Year + " to " + criteria.Month + " " + criteria.Year;
+
+            using (ExcelPackage unipay = new ExcelPackage(unipayTemplate))
+            {
+                ExcelWorksheet unipaySheet = unipay.Workbook.Worksheets.FirstOrDefault();
+
+                unipaySheet.Cells["D1"].Value = charterSchoolName;
+                unipaySheet.Cells["D3"].Value = "                                        " + headerDateRange;
+                unipaySheet.Cells["D4"].Value = "                                        Submission for " + criteria.Month + " " + criteria.Year + " Unipay";
+                unipaySheet.Cells["F6"].Value = DateTime.Now.Date.ToString("MM/dd/yyyy");
+
+                unipayRequestFile = SaveExcelFile(ReportType.Unipay, unipay, rootPath, criteria, charterSchoolName);
+            }
+
+            return unipayRequestFile;
+        }
+
+        private static void AddSchoolToUnipayRequest(FileInfo unipayFile, ExcelWorksheet invoiceSheet, int unipayRow, SchoolDistrict schoolDistrict)
+        {
+            using (ExcelPackage unipay = new ExcelPackage(unipayFile))
+            {
+                ExcelWorksheet unipaySheet = unipay.Workbook.Worksheets.FirstOrDefault();
+
+                unipaySheet.Cells["C" + unipayRow.ToString()].Value = schoolDistrict.Aun;
+                unipaySheet.Cells["D" + unipayRow.ToString()].Value = schoolDistrict.Name;
+
+                invoiceSheet.Cells["N35"].Calculate();
+                unipaySheet.Cells["F" + unipayRow.ToString()].Value = invoiceSheet.Cells["N35"].Value;
+
+                unipay.Save();
+            }
+        }
+
         private static bool UpdateInvoiceForPde(AppDbContext context, MonthlyInvoiceView criteria, string rootPath, string charterSchoolName, out List<string> files)
         {
             bool result = false;
             List<string> fileNames = new List<string>();
 
+            var unipayFile = GenerateUnipayRequest(criteria, rootPath, charterSchoolName);
+            fileNames.Add(unipayFile.FullName);
+
+            int unipayRow = 10;
             foreach(var sdName in criteria.SelectedSchoolDistricts)
             {
                 if (!string.IsNullOrEmpty(sdName))
@@ -256,9 +306,14 @@ namespace SchoolDistrictBilling.Services
 
                     using (ExcelPackage invoice = new ExcelPackage(new FileInfo(invoiceFileName)))
                     {
+                        // Set the 'Date Sent to PDE' field on the invoice.
                         ExcelWorksheet invoiceSheet = invoice.Workbook.Worksheets.FirstOrDefault();
                         invoiceSheet.Cells["N8"].Value = DateTime.Now.Date.ToString("MM/dd/yyyy");
                         invoice.Save();
+
+                        // Add the school to the unipay request
+                        var schoolDistrict = context.SchoolDistricts.Where(sd => sd.Name == sdName).FirstOrDefault();
+                        AddSchoolToUnipayRequest(unipayFile, invoiceSheet, unipayRow++, schoolDistrict);
 
                         // Add this invoice and student template to the list of files that were updated.
                         result = true;
@@ -462,13 +517,15 @@ namespace SchoolDistrictBilling.Services
             return cell;
         }
 
-        private static void SaveExcelFile(ReportType type, ExcelPackage excel, string rootPath, MonthlyInvoiceView criteria, string charterSchoolName, string schoolDistrictName)
+        private static FileInfo SaveExcelFile(ReportType type, ExcelPackage excel, string rootPath, MonthlyInvoiceView criteria, string charterSchoolName, string schoolDistrictName = null)
         {
             string fileName = GetReportFileName(type, rootPath, criteria, charterSchoolName, schoolDistrictName);
 
             Directory.CreateDirectory(GetReportPath(rootPath, criteria, charterSchoolName));
             FileInfo outputFile = new FileInfo(fileName);
             excel.SaveAs(outputFile);
+
+            return outputFile;
         }
 
         private static string GetReportFileName(ReportType type, string rootPath, MonthlyInvoiceView criteria, string charterSchoolName, string schoolDistrictName)
@@ -482,6 +539,10 @@ namespace SchoolDistrictBilling.Services
             else if (type == ReportType.Student)
             {
                 outputFilePath = outputFilePath + "/" + criteria.Month + criteria.Year + Regex.Replace(schoolDistrictName, @"\s+", "") + "Student.xlsx";
+            }
+            else if (type == ReportType.Unipay)
+            {
+                outputFilePath = outputFilePath + "/" + charterSchoolName + "Unipay.xlsx";
             }
             else
             {
@@ -499,7 +560,8 @@ namespace SchoolDistrictBilling.Services
     enum ReportType
     {
         Invoice,
-        Student
+        Student,
+        Unipay
     }
 
     enum SubmitTo
