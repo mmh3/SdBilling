@@ -1,0 +1,102 @@
+﻿@model SchoolDistrictBilling.Models.PaymentView
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h2>Edit Payment</h2>
+<hr />
+<form asp-action="Edit">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <input type="hidden" asp-for="PaymentUid" />
+    <input type="hidden" asp-for="CharterSchool" />
+    <input type="hidden" asp-for="SchoolDistrict" />
+
+    @for (int i = 0; i < Model.CharterSchools.Count; i++)
+    {
+        @Html.HiddenFor(model => Model.CharterSchools[i])
+    }
+    @for (int i = 0; i < Model.SchoolDistricts.Count; i++)
+    {
+        @Html.HiddenFor(model => Model.SchoolDistricts[i])
+    }
+    @for (int i = 0; i < Model.PaidByList.Count; i++)
+    {
+        @Html.HiddenFor(model => Model.PaidByList[i])
+    }
+
+    <div class="row form-group">
+        <label asp-for="CharterSchoolName" class="col-md-2 col-form-label"></label>
+        <div class="col-md-4">
+            <select id="drpSchool" class="form-control" asp-for="CharterSchoolName" selected="Model.CharterSchoolName" asp-items="@(new SelectList(Model.CharterSchools, "Name"))">
+                <option value="">--Select--</option>
+            </select>
+            <input type="hidden" asp-for="CharterSchoolName" />
+        </div>
+
+        <label asp-for="SchoolDistrictName" class="col-md-2 col-form-label"></label>
+        <div class="col-md-4">
+            <select id="drpSchoolDistrict" class="form-control" asp-for="SchoolDistrictName" asp-items="@(new SelectList(Model.SchoolDistricts, "Name"))">
+                <option value="">--Select--</option>
+            </select>
+            <input type="hidden" asp-for="SchoolDistrictName" />
+        </div>
+    </div>
+
+    <div class="row form-group">
+        <label asp-for="Date" class="col-md-2 col-form-label"></label>
+        <div class="col-md-4">
+            <input asp-for="Date" class="form-control" />
+            <span asp-validation-for="Date" class="text-danger"></span>
+        </div>
+
+        <label asp-for="PaidBy" class="col-md-2 col-form-label"></label>
+        <div class="col-md-4">
+            <select id="drpPaidBy" class="form-control" asp-for="PaidBy" asp-items="@(new SelectList(Model.PaidByList, "School"))">
+                <option value="">--Select--</option>
+            </select>
+            <input type="hidden" asp-for="PaidBy" />
+        </div>
+    </div>
+
+    <div class="row form-group">
+        <label asp-for="Amount" class="col-md-2 col-form-label"></label>
+        <div class="col-md-4">
+            <input asp-for="Amount" class="form-control" />
+            <span asp-validation-for="Amount" class="text-danger"></span>
+        </div>
+
+        <label asp-for="CheckNo" class="col-md-2 col-form-label"></label>
+        <div class="col-md-4">
+            <input asp-for="CheckNo" class="form-control" />
+            <span asp-validation-for="CheckNo" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <input type="submit" value="Save" class="btn btn-primary" />
+    </div>
+</form>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        $('#drpSchool').change(function () {
+            var val = $(this).val();
+            var sdSelect = $('#drpSchoolDistrict');
+            sdSelect.empty();
+
+            $.getJSON('@Url.Action("GetSchoolDistricts")', { charterSchoolName: val }, function (schoolDistricts) {
+                if (schoolDistricts != null && !jQuery.isEmptyObject(schoolDistricts)) {
+                    $.each(schoolDistricts, function (index, sd) {
+                        sdSelect.append($('<option/>', { value: sd.value, text: sd.text }));
+                    });
+                };
+            });
+        });
+    </script>
+}

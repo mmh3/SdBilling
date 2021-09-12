@@ -15,6 +15,7 @@
     <None Remove="Views\MonthlyInvoice\" />
     <None Remove="Views\SchoolDistricts\" />
     <None Remove="Views\Students\" />
+    <None Remove="Views\Payments\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MySql.Data.EntityFrameworkCore" Version="8.0.22" />
@@ -30,10 +31,12 @@
     <Folder Include="wwwroot\reports\" />
     <Folder Include="Views\SchoolDistricts\" />
     <Folder Include="Views\Students\" />
+    <Folder Include="Views\Payments\" />
   </ItemGroup>
   <ItemGroup>
     <Content Remove="wwwroot\reports\" />
     <Content Remove="wwwroot\reports\2021\August\FirstTestCharterSchool\August2021BradfordAreaSD.xlsx" />
     <Content Remove="wwwroot\reports\2021\August\FirstTestCharterSchool\August2021BrandywineHeightsAreaSD.xlsx" />
+    <Content Remove="wwwroot\reports\2021\September\FirstTestCharterSchool\~%24September2021BlueMountainSD.xlsx" />
   </ItemGroup>
 </Project>

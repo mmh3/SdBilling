@@ -1,0 +1,19 @@
+﻿@model SchoolDistrictBilling.Models.Payment
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<h3>Are you sure you want to delete payment @Html.DisplayFor(model => model.PaymentUid)?</h3>
+<div>
+    <br />
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="PaymentUid" />
+        <input type="submit" value="Delete" class="btn btn-danger" />
+    </form>
+</div>
+
+<br />
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
