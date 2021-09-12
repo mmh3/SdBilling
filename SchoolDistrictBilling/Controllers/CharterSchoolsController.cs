@@ -20,9 +20,9 @@ namespace SchoolDistrictBilling.Controllers
         }
 
         // GET: CharterSchools
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            return View(await _context.CharterSchools.ToListAsync());
+            return View(_context.CharterSchools.ToList());
         }
 
         // GET: CharterSchools/Create
