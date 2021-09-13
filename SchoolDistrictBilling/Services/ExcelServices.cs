@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using OfficeOpenXml;
+using OfficeOpenXml.Style;
 using SchoolDistrictBilling.Data;
 using SchoolDistrictBilling.Models;
 
@@ -148,7 +149,7 @@ namespace SchoolDistrictBilling.Services
         public static IEnumerable<string> GenerateMonthlyInvoice(AppDbContext context, string rootPath, MonthlyInvoiceView criteria)
         {
             var charterSchoolName = context.CharterSchools.Find(criteria.CharterSchoolUid).Name;
-            var headerDateRange = "For the Months of July " + criteria.Year + " to " + criteria.Month + " " + criteria.Year;
+            var headerDateRange = "For the Months of July " + GetStartYear(criteria.Month, criteria.Year) + " to " + criteria.Month + " " + criteria.Year;
             var currentDateString = DateTime.Now.Date.ToString("MM/dd/yyyy");
 
             if (criteria.SendTo == SubmitTo.PDE.ToString())
@@ -237,8 +238,18 @@ namespace SchoolDistrictBilling.Services
                             AddSchoolToUnipayRequest(unipayFile, invoiceSheet, unipayRow++, schoolDistrict);
                         }
 
-                        SaveExcelFile(ReportType.Invoice, invoice, rootPath, criteria, charterSchoolName, schoolDistrictName);
+                        var invoiceFile = SaveExcelFile(ReportType.Invoice, invoice, rootPath, criteria, charterSchoolName, schoolDistrictName);
                         SaveExcelFile(ReportType.Student, student, rootPath, criteria, charterSchoolName, schoolDistrictName);
+
+                        // Payments can insert rows and mess up the sheet for future iterations of the loop. Re-open the invoice
+                        // and apply to that instead of doing it before saving.
+                        using (ExcelPackage invoicePayments = new ExcelPackage(invoiceFile))
+                        {
+                            ExcelWorksheet paymentSheet = invoicePayments.Workbook.Worksheets.FirstOrDefault();
+
+                            PopulatePayments(paymentSheet, context, criteria, schoolDistrict);
+                            invoicePayments.Save();
+                        }
                     }
                 }
 
@@ -246,11 +257,79 @@ namespace SchoolDistrictBilling.Services
             }
         }
 
+        private static void PopulatePayments(ExcelWorksheet invoiceSheet, AppDbContext context, MonthlyInvoiceView criteria, SchoolDistrict schoolDistrict)
+        {
+            var startDate = new DateTime(int.Parse(GetStartYear(criteria.Month, criteria.Year)), 7, 1);
+            var monthInt = DateTime.ParseExact(criteria.Month, "MMMM", CultureInfo.CurrentCulture).Month;
+            var endDate = new DateTime(int.Parse(criteria.Year), monthInt, 1).AddMonths(1).AddDays(-1).AddHours(23).AddMinutes(59).AddSeconds(59);
+
+            // Get all of the payments for the current school year for the given charter school from the given school district.
+            var payments = context.Payments.Where(p => p.CharterSchoolUid == criteria.CharterSchoolUid &&
+                                                       p.SchoolDistrictUid == schoolDistrict.SchoolDistrictUid &&
+                                                       p.Date >= startDate && p.Date <= endDate).OrderBy(p => p.Date);
+
+            int currentMonth = 0;
+            int rowIncrement = 0;
+            foreach (var payment in payments)
+            {
+                // Get the row for the payment based on date.
+                int row = GetInvoicePaymentRow(payment.Date);
+
+                if (currentMonth == 0)
+                {
+                    currentMonth = payment.Date.Month;
+                }
+                else if (payment.Date.Month == currentMonth)
+                {
+                    rowIncrement++;
+                    row = row + rowIncrement;
+
+                    invoiceSheet.InsertRow(row, 1);
+                    invoiceSheet.Cells["F" + row.ToString()].Style.Numberformat.Format = "mm-dd-yy";
+                    invoiceSheet.Cells["E" + row.ToString()].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    invoiceSheet.Cells["F" + row.ToString()].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    invoiceSheet.Cells["G" + row.ToString() + ":H" + row.ToString()].Merge = true;
+                    invoiceSheet.Cells["I" + row.ToString() + ":J" + row.ToString()].Merge = true;
+                    invoiceSheet.Cells["K" + row.ToString() + ":L" + row.ToString()].Merge = true;
+                    invoiceSheet.Cells["G" + row.ToString()].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                    invoiceSheet.Cells["G" + row.ToString()].Style.Numberformat.Format = "$###,###,##0.00";
+                    invoiceSheet.Cells["I" + row.ToString()].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                    invoiceSheet.Cells["I" + row.ToString()].Style.Numberformat.Format = "$###,###,##0.00";
+                    invoiceSheet.Cells["K" + row.ToString()].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                    invoiceSheet.Cells["K" + row.ToString()].Style.Numberformat.Format = "$###,###,##0.00";
+                }
+                else
+                {
+                    currentMonth = payment.Date.Month;
+                    row = row + rowIncrement;
+                }
+
+                if (!string.IsNullOrEmpty(payment.CheckNo.ToString())) invoiceSheet.Cells["E" + row.ToString()].Value = payment.CheckNo;
+                invoiceSheet.Cells["F" + row.ToString()].Value = payment.Date.Date;
+
+                if (payment.Amount < 0)
+                {
+                    invoiceSheet.Cells["K" + row.ToString()].Value = Math.Abs(payment.Amount);
+                }
+                else
+                {
+                    if (payment.PaidBy == "School")
+                    {
+                        invoiceSheet.Cells["G" + row.ToString()].Value = payment.Amount;
+                    }
+                    else
+                    {
+                        invoiceSheet.Cells["I" + row.ToString()].Value = payment.Amount;
+                    }
+                }
+            }
+        }
+
         private static FileInfo GenerateUnipayRequest(MonthlyInvoiceView criteria, string rootPath, string charterSchoolName)
         {
             FileInfo unipayRequestFile = null;
             FileInfo unipayTemplate = new FileInfo(rootPath + "/reportTemplates/MonthlyUnipayRequest.xlsx");
-            var headerDateRange = "For the Months of July " + criteria.Year + " to " + criteria.Month + " " + criteria.Year;
+            var headerDateRange = "For the Months of July " + GetStartYear(criteria.Month, criteria.Year) + " to " + criteria.Month + " " + criteria.Year;
 
             using (ExcelPackage unipay = new ExcelPackage(unipayTemplate))
             {
@@ -517,6 +596,51 @@ namespace SchoolDistrictBilling.Services
             return cell;
         }
 
+        private static int GetInvoicePaymentRow(DateTime date)
+        {
+            switch (date.Month)
+            {
+                case 7:
+                    return 19;
+
+                case 8:
+                    return 20;
+
+                case 9:
+                    return 21;
+
+                case 10:
+                    return 22;
+
+                case 11:
+                    return 23;
+
+                case 12:
+                    return 24;
+
+                case 1:
+                    return 25;
+
+                case 2:
+                    return 26;
+
+                case 3:
+                    return 27;
+
+                case 4:
+                    return 28;
+
+                case 5:
+                    return 29;
+
+                case 6:
+                    return 30;
+
+                default:
+                    throw new Exception("Invalid payment date");
+            }
+        }
+
         private static FileInfo SaveExcelFile(ReportType type, ExcelPackage excel, string rootPath, MonthlyInvoiceView criteria, string charterSchoolName, string schoolDistrictName = null)
         {
             string fileName = GetReportFileName(type, rootPath, criteria, charterSchoolName, schoolDistrictName);
@@ -554,6 +678,19 @@ namespace SchoolDistrictBilling.Services
         private static string GetReportPath(string rootPath, MonthlyInvoiceView criteria, string charterSchoolName)
         {
             return rootPath + "/reports/" + criteria.Year + "/" + criteria.Month + "/" + Regex.Replace(charterSchoolName, @"\s+", "");
+        }
+
+        private static string GetStartYear(string month, string currentYear)
+        {
+            var secondHalfMonths = new List<string> { "July", "August", "September", "October", "November", "December" };
+            if (secondHalfMonths.Contains(month))
+            {
+                return currentYear;
+            }
+            else
+            {
+                return (int.Parse(currentYear) - 1).ToString();
+            }
         }
     }
 
