@@ -59,7 +59,8 @@ namespace SchoolDistrictBilling.Models
         public int PaymentUid { get; set; }
         public int CharterSchoolUid { get; set; }
         public int SchoolDistrictUid { get; set; }
-        public DateTime Date { get; set; }
+        [DataType(DataType.Date)]
+        public DateTime Date { get; set; } = DateTime.Today;
         [Display(Name = "Check #")]
         public int CheckNo { get; set; }
         public decimal Amount { get; set; }

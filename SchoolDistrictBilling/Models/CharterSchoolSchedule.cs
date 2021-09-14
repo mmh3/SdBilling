@@ -38,9 +38,11 @@ namespace SchoolDistrictBilling.Models
         public string EndGrade { get; set; }
 
         [Column("first_day")]
-        public DateTime FirstDay { get; set; }
+        [DataType(DataType.Date)]
+        public DateTime? FirstDay { get; set; }
 
         [Column("last_day")]
-        public DateTime LastDay { get; set; }
+        [DataType(DataType.Date)]
+        public DateTime? LastDay { get; set; }
     }
 }

@@ -37,6 +37,7 @@ namespace SchoolDistrictBilling.Models
         public decimal SpedRate { get; set; }
 
         [Column("effective_date")]
+        [DataType(DataType.Date)]
         public DateTime EffectiveDate { get; set; }
 
         [Column("notes")]

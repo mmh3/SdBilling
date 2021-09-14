@@ -59,7 +59,8 @@ namespace SchoolDistrictBilling.Models
         public string AddressZip { get; set; }
 
         [Column("dob")]
-        public DateTime Dob { get; set; }
+        [DataType(DataType.Date)]
+        public DateTime? Dob { get; set; }
 
         [Column("grade")]
         [StringLength(1)]
@@ -68,10 +69,12 @@ namespace SchoolDistrictBilling.Models
 
         [Column("district_entry_date")]
         [Display(Name = "Entry Date")]
-        public DateTime DistrictEntryDate { get; set; }
+        [DataType(DataType.Date)]
+        public DateTime? DistrictEntryDate { get; set; }
 
         [Column("exit_date")]
         [Display(Name = "Exit Date")]
+        [DataType(DataType.Date)]
         public DateTime? ExitDate { get; set; }
 
         [Column("sped_flag")]
@@ -85,10 +88,12 @@ namespace SchoolDistrictBilling.Models
 
         [Column("current_iep_date")]
         [Display(Name = "Current IEP Date")]
+        [DataType(DataType.Date)]
         public DateTime? CurrentIepDate { get; set; }
 
         [Column("prior_iep_date")]
         [Display(Name = "Prior IEP Date")]
+        [DataType(DataType.Date)]
         public DateTime? PriorIepDate { get; set; }
 
         [Column("charter_school_uid")]
@@ -108,7 +113,7 @@ namespace SchoolDistrictBilling.Models
             DateTime firstDayOfMonth = new DateTime(year, month, 1);
             DateTime lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1).Date.AddHours(23).AddMinutes(59).AddSeconds(59);
 
-            if (DistrictEntryDate.Date <= firstDayOfMonth && (ExitDate == null || ExitDate >= lastDayOfMonth))
+            if (DistrictEntryDate <= firstDayOfMonth && (ExitDate == null || ExitDate >= lastDayOfMonth))
             {
                 // If the student attended this school for the whole month, they're a full student.
                 return 1;
@@ -122,7 +127,7 @@ namespace SchoolDistrictBilling.Models
                 // Student started mid-month
                 if (DistrictEntryDate >= firstDayOfMonth)
                 {
-                    return decimal.Round(GetSchoolDays(DistrictEntryDate, lastDayOfMonth, holidays) / daysInMonth, 3);
+                    return decimal.Round(GetSchoolDays((DateTime)DistrictEntryDate, lastDayOfMonth, holidays) / daysInMonth, 3);
                 }
                 // Student exited mid-month
                 else

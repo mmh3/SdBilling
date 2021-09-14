@@ -82,7 +82,7 @@ namespace SchoolDistrictBilling.Controllers
 
             schedules.Sort((x, y) =>
                 {
-                    int compareDate = y.LastDay.CompareTo(x.LastDay);
+                    int compareDate = ((DateTime)y.LastDay).CompareTo((DateTime)x.LastDay);
 
                     if (compareDate == 0)
                     {

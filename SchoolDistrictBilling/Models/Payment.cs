@@ -39,7 +39,8 @@ namespace SchoolDistrictBilling.Models
 
         [Column("date")]
         [Required]
-        public DateTime Date { get; set; }
+        [DataType(DataType.Date)]
+        public DateTime Date { get; set; } = DateTime.Today;
 
         [Column("check_no")]
         public int CheckNo { get; set; }
