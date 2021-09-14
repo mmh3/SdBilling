@@ -6,86 +6,138 @@
 
 <h2>Create Student</h2>
 <hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Student.StateStudentNo" class="control-label"></label>
-                <input asp-for="Student.StateStudentNo" class="form-control" />
-                <span asp-validation-for="Student.StateStudentNo" class="text-danger"></span>
 
-                <label asp-for="Student.FirstName" class="control-label"></label>
-                <input asp-for="Student.FirstName" class="form-control" />
-                <span asp-validation-for="Student.FirstName" class="text-danger"></span>
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-                <label asp-for="Student.LastName" class="control-label"></label>
-                <input asp-for="Student.LastName" class="form-control" />
-                <span asp-validation-for="Student.LastName" class="text-danger"></span>
-
-                <label asp-for="Student.CharterSchoolUid" class="control-label"></label>
-                <input asp-for="Student.CharterSchoolUid" class="form-control" />
-                <span asp-validation-for="Student.CharterSchoolUid" class="text-danger"></span>
-
-                <label asp-for="Student.Aun" class="control-label"></label>
-                <input asp-for="Student.Aun" class="form-control" />
-                <span asp-validation-for="Student.Aun" class="text-danger"></span>
-
-                <label asp-for="Student.AddressStreet" class="control-label"></label>
-                <input asp-for="Student.AddressStreet" class="form-control" />
-                <span asp-validation-for="Student.AddressStreet" class="text-danger"></span>
-
-                <label asp-for="Student.AddressCity" class="control-label"></label>
-                <input asp-for="Student.AddressCity" class="form-control" />
-                <span asp-validation-for="Student.AddressCity" class="text-danger"></span>
-
-                <label asp-for="Student.AddressState" class="control-label"></label>
-                <input asp-for="Student.AddressState" class="form-control" />
-                <span asp-validation-for="Student.AddressState" class="text-danger"></span>
-
-                <label asp-for="Student.AddressZip" class="control-label"></label>
-                <input asp-for="Student.AddressZip" class="form-control" />
-                <span asp-validation-for="Student.AddressZip" class="text-danger"></span>
-
-                <label asp-for="Student.Dob" class="control-label"></label>
-                <input asp-for="Student.Dob" class="form-control" />
-                <span asp-validation-for="Student.Dob" class="text-danger"></span>
-
-                <label asp-for="Student.Grade" class="control-label"></label>
-                <input asp-for="Student.Grade" class="form-control" />
-                <span asp-validation-for="Student.Grade" class="text-danger"></span>
-
-                <label asp-for="Student.DistrictEntryDate" class="control-label"></label>
-                <input asp-for="Student.DistrictEntryDate" class="form-control" />
-                <span asp-validation-for="Student.DistrictEntryDate" class="text-danger"></span>
-
-                <label asp-for="Student.ExitDate" class="control-label"></label>
-                <input asp-for="Student.ExitDate" class="form-control" />
-                <span asp-validation-for="Student.ExitDate" class="text-danger"></span>
-
-                <label asp-for="Student.SpedFlag" class="control-label"></label>
-                <input asp-for="Student.SpedFlag" class="form-control" />
-                <span asp-validation-for="Student.SpedFlag" class="text-danger"></span>
-
-                <label asp-for="Student.IepFlag" class="control-label"></label>
-                <input asp-for="Student.IepFlag" class="form-control" />
-                <span asp-validation-for="Student.IepFlag" class="text-danger"></span>
-
-                <label asp-for="Student.CurrentIepDate" class="control-label"></label>
-                <input asp-for="Student.CurrentIepDate" class="form-control" />
-                <span asp-validation-for="Student.CurrentIepDate" class="text-danger"></span>
-
-                <label asp-for="Student.PriorIepDate" class="control-label"></label>
-                <input asp-for="Student.PriorIepDate" class="form-control" />
-                <span asp-validation-for="Student.PriorIepDate" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+    <div class="row form-group">
+        <label asp-for="Student.StateStudentNo" class="col-md-2 control-label"></label>
+        <div class="col-md-4">
+            <input asp-for="Student.StateStudentNo" class="form-control" />
+            <span asp-validation-for="Student.StateStudentNo" class="text-danger"></span>
+        </div>
     </div>
-</div>
+
+    <div class="row form-group">
+        <label asp-for="Student.CharterSchoolUid" class="col-md-2 control-label"></label>
+        <div class="col-md-4">
+            <select id="drpSchool" class="form-control" asp-for="Student.CharterSchoolUid" asp-items="@(new SelectList(Model.CharterSchools, "CharterSchoolUid", "Name"))">
+                <option value="">--Select--</option>
+            </select>
+            <input type="hidden" asp-for="Student.CharterSchoolUid" />
+
+            <span asp-validation-for="Student.CharterSchoolUid" class="text-danger"></span>
+        </div>
+
+        <label asp-for="Student.Aun" class="col-md-2 control-label"></label>
+        <div class="col-md-4">
+            <select id="drpSchoolDistrict" class="form-control" asp-for="Student.Aun" asp-items="@(new SelectList(Model.SchoolDistricts, "Aun", "Name"))">
+                <option value="">--Select--</option>
+            </select>
+            <input type="hidden" asp-for="Student.Aun" />
+
+            <span asp-validation-for="Student.Aun" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row form-group">
+        <label asp-for="Student.FirstName" class="col-md-2 control-label"></label>
+        <div class="col-md-4">
+            <input asp-for="Student.FirstName" class="form-control" />
+            <span asp-validation-for="Student.FirstName" class="text-danger"></span>
+        </div>
+
+
+        <label asp-for="Student.LastName" class="col-md-2 control-label"></label>
+        <div class="col-md-4">
+            <input asp-for="Student.LastName" class="form-control" />
+            <span asp-validation-for="Student.LastName" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row form-group">
+        <label asp-for="Student.Dob" class="col-md-2 control-label"></label>
+        <div class="col-md-4">
+            <input asp-for="Student.Dob" class="form-control" />
+            <span asp-validation-for="Student.Dob" class="text-danger"></span>
+        </div>
+
+        <label asp-for="Student.Grade" class="col-md-2 control-label"></label>
+        <div class="col-md-4">
+            <input asp-for="Student.Grade" class="form-control" />
+            <span asp-validation-for="Student.Grade" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row form-group">
+        <label asp-for="Student.DistrictEntryDate" class="col-md-2 control-label"></label>
+        <div class="col-md-4">
+            <input asp-for="Student.DistrictEntryDate" class="form-control" />
+            <span asp-validation-for="Student.DistrictEntryDate" class="text-danger"></span>
+        </div>
+
+        <label asp-for="Student.ExitDate" class="col-md-2 control-label"></label>
+        <div class="col-md-4">
+            <input asp-for="Student.ExitDate" class="form-control" />
+            <span asp-validation-for="Student.ExitDate" class="text-danger"></span>
+        </div>
+    </div>
+
+    <br />
+    <div class="row form-group">
+        <label asp-for="Student.AddressStreet" class="col-md-2 control-label"></label>
+        <div class="col-md-6">
+            <input asp-for="Student.AddressStreet" class="form-control" />
+            <span asp-validation-for="Student.AddressStreet" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row form-group">
+        <label asp-for="Student.AddressCity" class="col-md-2 control-label"></label>
+        <div class="col-md-3">
+            <input asp-for="Student.AddressCity" class="form-control" />
+            <span asp-validation-for="Student.AddressCity" class="text-danger"></span>
+        </div>
+
+        <label asp-for="Student.AddressState" class="col-md-1 control-label"></label>
+        <div class="col-md-1">
+            <input asp-for="Student.AddressState" class="form-control" />
+            <span asp-validation-for="Student.AddressState" class="text-danger"></span>
+        </div>
+
+        <label asp-for="Student.AddressZip" class="col-md-1 control-label"></label>
+        <div class="col-md-2">
+            <input asp-for="Student.AddressZip" class="form-control" />
+            <span asp-validation-for="Student.AddressZip" class="text-danger"></span>
+        </div>
+    </div>
+
+    <br />
+    <div class="row form-group">
+        <!-- TODO: make this a checkbox -->
+        <label asp-for="Student.IepFlag" class="col-md-1 control-label"></label>
+        <div class="col-md-1">
+            <input asp-for="Student.IepFlag" class="form-control" />
+            <span asp-validation-for="Student.IepFlag" class="text-danger"></span>
+        </div>
+
+        <label asp-for="Student.CurrentIepDate" class="col-md-2 control-label"></label>
+        <div class="col-md-3">
+            <input asp-for="Student.CurrentIepDate" class="form-control" />
+            <span asp-validation-for="Student.CurrentIepDate" class="text-danger"></span>
+        </div>
+
+        <label asp-for="Student.PriorIepDate" class="col-md-2 control-label"></label>
+        <div class="col-md-3">
+            <input asp-for="Student.PriorIepDate" class="form-control" />
+            <span asp-validation-for="Student.PriorIepDate" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <input type="submit" value="Create" class="btn btn-primary" />
+    </div>
+</form>
 
 <div>
     <a asp-action="Index">Back to List</a>

@@ -40,7 +40,13 @@ namespace SchoolDistrictBilling.Controllers
         // GET: Students/Create
         public IActionResult Create()
         {
-            return View();
+            var view = new StudentView()
+            {
+                CharterSchools = _context.CharterSchools.ToList(),
+                SchoolDistricts = _context.SchoolDistricts.ToList()
+            };
+
+            return View(view);
         }
 
         // POST: Students/Create
@@ -50,13 +56,21 @@ namespace SchoolDistrictBilling.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(StudentView studentView)
         {
-            if (ModelState.IsValid)
+            var errors = ModelState.Select(x => x.Value.Errors)
+                .Where(y => y.Count > 0)
+                .ToList();
+            
+            if (errors.Count() == 3 &&
+                errors[0][0].ErrorMessage == "The Name field is required." &&
+                errors[1][0].ErrorMessage == "The Aun field is required." &&
+                errors[2][0].ErrorMessage == "The Name field is required.")
             {
                 _context.Add(studentView.Student);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(studentView.Student);
+
+            return View(studentView);
         }
 
         // GET: Students/Delete/5

@@ -17,37 +17,45 @@ namespace SchoolDistrictBilling.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Required]
+        [Display(Name = "Id")]
         public int StudentUid { get; set; }
 
         [Column("state_student_no")]
         [Required]
         [StringLength(255)]
+        [Display(Name = "State #")]
         public string StateStudentNo { get; set; }
 
         [Column("first_name")]
         [Required]
         [StringLength(255)]
+        [Display(Name = "First Name")]
         public string FirstName { get; set; }
 
         [Column("last_name")]
         [Required]
         [StringLength(255)]
+        [Display(Name = "Last Name")]
         public string LastName { get; set; }
 
         [Column("address_street")]
         [StringLength(255)]
+        [Display(Name = "Street")]
         public string AddressStreet { get; set; }
 
         [Column("address_city")]
         [StringLength(255)]
+        [Display(Name = "City")]
         public string AddressCity { get; set; }
 
         [Column("address_state")]
         [StringLength(2)]
+        [Display(Name = "State")]
         public string AddressState { get; set; }
 
         [Column("address_zip")]
         [StringLength(255)]
+        [Display(Name = "Zip")]
         public string AddressZip { get; set; }
 
         [Column("dob")]
@@ -55,12 +63,15 @@ namespace SchoolDistrictBilling.Models
 
         [Column("grade")]
         [StringLength(1)]
+        //TODO: Make Grade char(2)
         public string Grade { get; set; }
 
         [Column("district_entry_date")]
+        [Display(Name = "Entry Date")]
         public DateTime DistrictEntryDate { get; set; }
 
         [Column("exit_date")]
+        [Display(Name = "Exit Date")]
         public DateTime? ExitDate { get; set; }
 
         [Column("sped_flag")]
@@ -69,21 +80,26 @@ namespace SchoolDistrictBilling.Models
 
         [Column("iep_flag")]
         [StringLength(1)]
+        [Display(Name = "IEP Flag")]
         public string IepFlag { get; set; }
 
         [Column("current_iep_date")]
+        [Display(Name = "Current IEP Date")]
         public DateTime? CurrentIepDate { get; set; }
 
         [Column("prior_iep_date")]
+        [Display(Name = "Prior IEP Date")]
         public DateTime? PriorIepDate { get; set; }
 
         [Column("charter_school_uid")]
         [Required]
+        [Display(Name = "Charter School")]
         public int CharterSchoolUid { get; set; }
 
         [Column("aun")]
         [Required]
         [StringLength(255)]
+        [Display(Name = "School District")]
         public string Aun { get; set; }
 
         public decimal GetMonthlyAttendanceValue(int month, int year, List<CharterSchoolScheduleDate> holidays)
