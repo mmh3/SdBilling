@@ -8,12 +8,19 @@ namespace SchoolDistrictBilling.Models
     [Table("charter_school_schedule")]
     public class CharterSchoolSchedule
     {
-        public CharterSchoolSchedule() { }
+        public CharterSchoolSchedule()
+        {
+            FirstDay = DateTime.Today.Date;
+            LastDay = DateTime.Today.Date;
+        }
         public CharterSchoolSchedule(CharterSchool school)
         {
             CharterSchoolUid = school.CharterSchoolUid;
             StartGrade = "K";
             EndGrade = "12";
+
+            FirstDay = DateTime.Today.Date;
+            LastDay = DateTime.Today.Date;
         }
 
         [Column("charter_school_schedule_uid")]
