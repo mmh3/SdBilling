@@ -72,7 +72,7 @@ namespace SchoolDistrictBilling.Controllers
             if (schedules == null || schedules.Count() < 1)
             {
                 var schedule = new CharterSchoolSchedule(charterSchool);
-                
+
                 _context.Add(schedule);
                 await _context.SaveChangesAsync();
 
@@ -82,6 +82,8 @@ namespace SchoolDistrictBilling.Controllers
 
             schedules.Sort((x, y) =>
                 {
+                    if (y.LastDay == null) y.LastDay = DateTime.Today.Date;
+                    if (x.LastDay == null) x.LastDay = DateTime.Today.Date;
                     int compareDate = ((DateTime)y.LastDay).CompareTo((DateTime)x.LastDay);
 
                     if (compareDate == 0)
@@ -301,7 +303,7 @@ namespace SchoolDistrictBilling.Controllers
                 CharterSchoolScheduleUid = evt.CharterSchoolScheduleUid,
                 Date = Convert.ToDateTime(evt.Start)
             };
-            
+
             _context.Add(date);
             await _context.SaveChangesAsync();
 
