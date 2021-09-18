@@ -1,0 +1,68 @@
+﻿@model SchoolDistrictBilling.Models.SchoolDistrictRateView
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h2>Edit Rate</h2>
+<hr />
+<form asp-action="Edit">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <input type="hidden" asp-for="SchoolDistrict.SchoolDistrictUid" />
+    <input type="hidden" asp-for="SchoolDistrictRate.SchoolDistrictRateUid" />
+    <input type="hidden" asp-for="SchoolDistrictRate.SchoolDistrictUid" />
+
+    <div class="row form-group">
+        <label asp-for="SchoolDistrict.Aun" class="col-md-1 col-form-label"></label>
+        <div class="col-md-3">
+            <input asp-for="SchoolDistrict.Aun" class="form-control" readonly />
+            <span asp-validation-for="SchoolDistrict.Aun" class="text-danger"></span>
+        </div>
+
+        <label asp-for="SchoolDistrict.Name" class="col-md-1 col-form-label"></label>
+        <div class="col-md-3">
+            <input asp-for="SchoolDistrict.Name" class="form-control" readonly />
+            <span asp-validation-for="SchoolDistrict.Name" class="text-danger"></span>
+        </div>
+
+        <label asp-for="SchoolDistrict.County" class="col-md-1 col-form-label"></label>
+        <div class="col-md-3">
+            <input asp-for="SchoolDistrict.County" class="form-control" readonly />
+            <span asp-validation-for="SchoolDistrict.County" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row form-group">
+        <label asp-for="SchoolDistrictRate.NonSpedRate" class="col-md-2 col-form-label"></label>
+        <div class="col-md-2">
+            <input asp-for="SchoolDistrictRate.NonSpedRate" class="form-control" />
+            <span asp-validation-for="SchoolDistrictRate.NonSpedRate" class="text-danger"></span>
+        </div>
+
+        <label asp-for="SchoolDistrictRate.SpedRate" class="col-md-2 col-form-label"></label>
+        <div class="col-md-2">
+            <input asp-for="SchoolDistrictRate.SpedRate" class="form-control" />
+            <span asp-validation-for="SchoolDistrictRate.SpedRate" class="text-danger"></span>
+        </div>
+
+        <label asp-for="SchoolDistrictRate.EffectiveDate" class="col-md-2 col-form-label"></label>
+        <div class="col-md-2">
+            <input asp-for="SchoolDistrictRate.EffectiveDate" class="form-control" />
+            <span asp-validation-for="SchoolDistrictRate.EffectiveDate" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row form-group">
+        <div class="form-group">
+            <input type="submit" value="Save" class="btn btn-primary" />
+        </div>
+    </div>
+</form>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+}

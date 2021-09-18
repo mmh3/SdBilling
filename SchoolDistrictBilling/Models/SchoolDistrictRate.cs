@@ -31,12 +31,15 @@ namespace SchoolDistrictBilling.Models
         public int SchoolDistrictUid { get; set; }
 
         [Column("non_sped_rate")]
+        [DisplayName("Non-sped Rate")]
         public decimal NonSpedRate { get; set; }
 
         [Column("sped_rate")]
+        [DisplayName("Sped Rate")]
         public decimal SpedRate { get; set; }
 
         [Column("effective_date")]
+        [DisplayName("Effective Date")]
         [DataType(DataType.Date)]
         public DateTime EffectiveDate { get; set; }
 

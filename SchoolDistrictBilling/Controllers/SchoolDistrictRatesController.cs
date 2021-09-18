@@ -27,6 +27,7 @@ namespace SchoolDistrictBilling.Controllers
             List<SchoolDistrict> schoolDistricts = await _context.SchoolDistricts.ToListAsync();
             List<SchoolDistrictRate> schoolDistrictRates = await _context.SchoolDistrictRates.ToListAsync();
 
+            //TODO: Only select the latest rate for each school district.
             var viewModel = from d in schoolDistricts
                             join r in schoolDistrictRates on d.SchoolDistrictUid equals r.SchoolDistrictUid into table1
                             from r in table1.ToList()
@@ -86,6 +87,92 @@ namespace SchoolDistrictBilling.Controllers
                             };
 
             return View("Index", viewModel);
+        }
+
+        // GET: SchoolDistrictRates/Delete/5
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var rate = await _context.SchoolDistrictRates.FirstOrDefaultAsync(r => r.SchoolDistrictRateUid == id);
+            if (rate == null)
+            {
+                return NotFound();
+            }
+
+            return View(new SchoolDistrictRateView(_context, rate));
+        }
+
+        // POST: SchoolDistrictRates/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var rate = await _context.SchoolDistrictRates.FindAsync(id);
+            _context.SchoolDistrictRates.Remove(rate);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // GET: SchoolDistrictRates/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var rate = await _context.SchoolDistrictRates.FindAsync(id);
+            if (rate == null)
+            {
+                return NotFound();
+            }
+
+            return View(new SchoolDistrictRateView(_context, rate));
+        }
+
+        // POST: SchoolDistrictRates/Edit/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, SchoolDistrictRateView view)
+        {
+            if (id != view.SchoolDistrictRate.SchoolDistrictRateUid)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(view.SchoolDistrictRate);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!RateExists(view.SchoolDistrictRate.SchoolDistrictRateUid))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(view);
+        }
+        private bool RateExists(int uid)
+        {
+            return _context.SchoolDistrictRates.Any(r => r.SchoolDistrictRateUid == uid);
         }
     }
 }
