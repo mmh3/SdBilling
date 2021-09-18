@@ -71,6 +71,8 @@ namespace SchoolDistrictBilling.Controllers
             }
 
             List<SchoolDistrictRateView> rates = ExcelServices.ImportSchoolDistrictRates(_context, fileNames);
+
+            //TODO: Can we just redirect to Index action here???
             List<SchoolDistrict> schoolDistricts = await _context.SchoolDistricts.ToListAsync();
             List<SchoolDistrictRate> schoolDistrictRates = await _context.SchoolDistrictRates.ToListAsync();
 

@@ -6,11 +6,13 @@
 @* <h1>@ViewData["Title"]</h1> *@
 
 <h2>School District Rates</h2>
-
+<hr />
+<h4>Import Rates</h4>
 <form method="post" enctype="multipart/form-data" asp-controller="SchoolDistrictRates" asp-action="Import">
     <input type="file" name="files" multiple />
     <input type="submit" value="Upload" />
 </form>
+<br />
 
 @*TODO: how to pin nav bar to the top, footer to the bottom. Table headers to the top so only the table content scrolls *@
 @* TODO: how to show effective dates without the timestamp *@
