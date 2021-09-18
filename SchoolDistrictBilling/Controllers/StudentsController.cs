@@ -1,10 +1,14 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SchoolDistrictBilling.Data;
 using SchoolDistrictBilling.Models;
+using SchoolDistrictBilling.Services;
 
 namespace SchoolDistrictBilling.Controllers
 {
@@ -18,23 +22,9 @@ namespace SchoolDistrictBilling.Controllers
         }
 
         // GET: Students
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            List<Student> students = await _context.Students.ToListAsync();
-            List<SchoolDistrict> schoolDistricts = await _context.SchoolDistricts.ToListAsync();
-            List<CharterSchool> charterSchools = await _context.CharterSchools.ToListAsync();
-
-            var viewModel = from s in students
-                            join sd in schoolDistricts on s.Aun equals sd.Aun
-                            join cs in charterSchools on s.CharterSchoolUid equals cs.CharterSchoolUid
-                            select new StudentView
-                            {
-                                Student = s,
-                                SchoolDistrict = sd,
-                                CharterSchool = cs
-                            };
-
-            return View(viewModel);
+            return View(new StudentIndexView(_context));
         }
 
         // GET: Students/Create
@@ -59,7 +49,7 @@ namespace SchoolDistrictBilling.Controllers
             var errors = ModelState.Select(x => x.Value.Errors)
                 .Where(y => y.Count > 0)
                 .ToList();
-            
+
             if (errors.Count() == 3 &&
                 errors[0][0].ErrorMessage == "The Name field is required." &&
                 errors[1][0].ErrorMessage == "The Aun field is required." &&
@@ -160,6 +150,39 @@ namespace SchoolDistrictBilling.Controllers
         private bool StudentExists(int uid)
         {
             return _context.Students.Any(s => s.StudentUid == uid);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ImportStudents(int ImportCharterSchoolUid, List<IFormFile> files)
+        {
+            List<string> fileNames = new List<string>();
+            foreach (var formFile in files)
+            {
+                if (formFile.Length > 0)
+                {
+                    // full path to file in temp location
+                    //TODO: What's the comment here about doing this differently?
+                    var filePath = Path.GetTempFileName(); //we are using Temp file name just for the example. Add your own file path.
+
+                    try
+                    {
+                        fileNames.Add(filePath);
+                    }
+                    catch (ArgumentException e)
+                    {
+                        //TODO: What to do here?
+                    }
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await formFile.CopyToAsync(stream);
+                    }
+                }
+            }
+
+            ExcelServices.ImportStudents(_context, fileNames, ImportCharterSchoolUid);
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }

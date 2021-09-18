@@ -32,10 +32,6 @@ namespace SchoolDistrictBilling.Services
                 {
                     using (ExcelPackage excelPackage = new ExcelPackage(stream))
                     {
-                        //loop all worksheets
-                        //TODO: What's the deal with the second worksheet? Is it safe to only import the first worksheet?
-                        //foreach (ExcelWorksheet worksheet in excelPackage.Workbook.Worksheets)
-                        //{
                         ExcelWorksheet worksheet = excelPackage.Workbook.Worksheets.First();
 
                         //loop all rows. Start with the second row
@@ -138,7 +134,6 @@ namespace SchoolDistrictBilling.Services
                                 }
                             }
                         }
-                        //}
                     }
                 }
             }
@@ -146,6 +141,134 @@ namespace SchoolDistrictBilling.Services
             context.SaveChanges();
 
             return rates;
+        }
+
+        public static List<Student> ImportStudents(AppDbContext context, List<string> fileNames, int charterSchoolUid)
+        {
+            List<Student> students = new List<Student>();
+
+            foreach (var fileName in fileNames)
+            {
+                byte[] bin = File.ReadAllBytes(fileName);
+
+                List<string> columns = new List<string>();
+
+                //create a new Excel package in a memorystream
+                using (MemoryStream stream = new MemoryStream(bin))
+                {
+                    using (ExcelPackage excelPackage = new ExcelPackage(stream))
+                    {
+                        ExcelWorksheet worksheet = excelPackage.Workbook.Worksheets.First();
+
+                        //loop all rows. Start with the second row
+                        for (int i = worksheet.Dimension.Start.Row; i <= worksheet.Dimension.End.Row; i++)
+                        {
+                            Student student = new Student();
+                            student.CharterSchoolUid = charterSchoolUid;
+
+                            //loop all columns in a row
+                            for (int j = worksheet.Dimension.Start.Column; j <= worksheet.Dimension.End.Column; j++)
+                            {
+                                if (worksheet.Cells[i, j].Value != null)
+                                {
+                                    if (i == 1)
+                                    {
+                                        columns.Add(worksheet.Cells[i, j].Value.ToString());
+                                    }
+                                    else
+                                    {
+                                        // TODO: This feels confusing. Is there a better way to do this with the objects and updating/inserting? What
+                                        // if the columns are in a different order or have slightly different names?
+                                        switch (columns[j - 1].ToLower())
+                                        {
+                                            case "state student #":
+                                                student.StateStudentNo = worksheet.Cells[i, j].Value.ToString();
+                                                break;
+
+                                            case "aun":
+                                                student.Aun = worksheet.Cells[i, j].Value.ToString();
+                                                break;
+
+                                            case "first name":
+                                                student.FirstName = worksheet.Cells[i, j].Value.ToString();
+                                                break;
+
+                                            case "last name":
+                                                student.LastName = worksheet.Cells[i, j].Value.ToString();
+                                                break;
+
+                                            case "street":
+                                                student.AddressStreet = worksheet.Cells[i, j].Value.ToString();
+                                                break;
+
+                                            case "city":
+                                                student.AddressCity = worksheet.Cells[i, j].Value.ToString();
+                                                break;
+
+                                            case "state":
+                                                student.AddressState = worksheet.Cells[i, j].Value.ToString();
+                                                break;
+
+                                            case "zip":
+                                                student.AddressZip = worksheet.Cells[i, j].Value.ToString();
+                                                break;
+
+                                            case "dob":
+                                                student.Dob = DateTime.Parse(worksheet.Cells[i, j].Value.ToString());
+                                                break;
+
+                                            case "grade":
+                                                student.Grade = worksheet.Cells[i, j].Value.ToString();
+                                                break;
+
+                                            case "district entry date":
+                                                student.DistrictEntryDate = DateTime.Parse(worksheet.Cells[i, j].Value.ToString());
+                                                break;
+
+                                            case "exit date":
+                                                student.ExitDate = DateTime.Parse(worksheet.Cells[i, j].Value.ToString());
+                                                break;
+
+                                            case "iep":
+                                                student.IepFlag = worksheet.Cells[i, j].Value.ToString();
+                                                break;
+
+                                            case "current iep date":
+                                                student.CurrentIepDate = DateTime.Parse(worksheet.Cells[i, j].Value.ToString());
+                                                break;
+
+                                            case "prior iep date":
+                                                student.PriorIepDate = DateTime.Parse(worksheet.Cells[i, j].Value.ToString());
+                                                break;
+
+                                            default:
+
+                                                break;
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (i > 1)
+                            {
+                                Student existingStudent = context.Students.FirstOrDefault(s => s.StateStudentNo == student.StateStudentNo && s.CharterSchoolUid == student.CharterSchoolUid);
+                                if (existingStudent == null)
+                                {
+                                    context.Students.Add(student);
+                                }
+                                else
+                                {
+                                    existingStudent.CopyPropertiesFrom(student);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            context.SaveChanges();
+
+            return students;
         }
 
         public static IEnumerable<string> GenerateMonthlyInvoice(AppDbContext context, string rootPath, MonthlyInvoiceView criteria)

@@ -9,9 +9,7 @@ namespace SchoolDistrictBilling.Models
     [Table("student")]
     public class Student
     {
-        public Student()
-        {
-        }
+        public Student() { }
 
         [Column("student_uid")]
         [Key]
@@ -153,6 +151,25 @@ namespace SchoolDistrictBilling.Models
             }
 
             return totalDays;
+        }
+
+        public void CopyPropertiesFrom(Student student)
+        {
+            Aun = student.Aun;
+            FirstName = student.FirstName;
+            LastName = student.LastName;
+            AddressStreet = student.AddressStreet;
+            AddressCity = student.AddressCity;
+            AddressState = student.AddressState;
+            AddressZip = student.AddressZip;
+            Dob = student.Dob;
+            Grade = student.Grade;
+            DistrictEntryDate = student.DistrictEntryDate;
+            ExitDate = student.ExitDate;
+            IepFlag = student.IepFlag;
+            CurrentIepDate = student.CurrentIepDate;
+            PriorIepDate = student.PriorIepDate;
+            CharterSchoolUid = student.CharterSchoolUid;
         }
     }
 }

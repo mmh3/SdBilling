@@ -1,4 +1,4 @@
-﻿@model IEnumerable<SchoolDistrictBilling.Models.StudentView>
+﻿@model StudentIndexView
 
 @{
     @* ViewData["Title"] = "Students"; *@
@@ -6,7 +6,28 @@
 @* <h1>@ViewData["Title"]</h1> *@
 
 <h2>Students</h2>
+<hr />
+<h4>Import Students</h4>
+<form method="post" enctype="multipart/form-data" asp-controller="Students" asp-action="ImportStudents">
+    <div class="row form-group">
+        <div class="col-md-4">
+            <select id="drpSchool" class="form-control" asp-for="ImportCharterSchoolUid" asp-items="@(new SelectList(Model.ImportCharterSchools, "CharterSchoolUid", "Name"))">
+                <option value="">--Select--</option>
+            </select>
+            <input type="hidden" asp-for="ImportCharterSchoolUid" />
+        </div>
 
+        <div class="col-md-6">
+            <input type="file" name="files" multiple />
+        </div>
+
+        <div class="col-md-2">
+            <input type="submit" value="Upload" />
+        </div>
+    </div>
+</form>
+
+<hr />
 <p>
     <a asp-action="Create">Create New</a>
 </p>
@@ -14,7 +35,7 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Student.StudentUid)
+                @Html.DisplayNameFor(model => model.Students.First().Student.StudentUid)
             </th>
             <th>
                 @*@Html.DisplayNameFor(model => model.CharterSchool.Name)*@
@@ -25,38 +46,38 @@
                 School District
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Student.LastName)
+                @Html.DisplayNameFor(model => model.Students.First().Student.LastName)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Student.FirstName)
+                @Html.DisplayNameFor(model => model.Students.First().Student.FirstName)
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model)
+        @foreach (var item in Model.Students)
         {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Student.StudentUid)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CharterSchool.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.SchoolDistrict.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Student.LastName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Student.FirstName)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Student.StudentUid">Edit</a> |
-                <a asp-action="Delete" asp-route-id="@item.Student.StudentUid">Delete</a>
-            </td>
-        </tr>
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Student.StudentUid)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CharterSchool.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.SchoolDistrict.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Student.LastName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Student.FirstName)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Student.StudentUid">Edit</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Student.StudentUid">Delete</a>
+                </td>
+            </tr>
         }
     </tbody>
 </table>
