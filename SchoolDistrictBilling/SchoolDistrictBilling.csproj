@@ -16,6 +16,7 @@
     <None Remove="Views\SchoolDistricts\" />
     <None Remove="Views\Students\" />
     <None Remove="Views\Payments\" />
+    <None Remove="Views\YearEndRecon\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MySql.Data.EntityFrameworkCore" Version="8.0.22" />
@@ -32,6 +33,7 @@
     <Folder Include="Views\SchoolDistricts\" />
     <Folder Include="Views\Students\" />
     <Folder Include="Views\Payments\" />
+    <Folder Include="Views\YearEndRecon\" />
   </ItemGroup>
   <ItemGroup>
     <Content Remove="wwwroot\reports\" />

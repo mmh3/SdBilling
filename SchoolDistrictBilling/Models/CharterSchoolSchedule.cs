@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using SchoolDistrictBilling.Data;
 
 namespace SchoolDistrictBilling.Models
 {
@@ -46,10 +49,42 @@ namespace SchoolDistrictBilling.Models
 
         [Column("first_day")]
         [DataType(DataType.Date)]
-        public DateTime? FirstDay { get; set; }
+        public DateTime FirstDay { get; set; }
 
         [Column("last_day")]
         [DataType(DataType.Date)]
-        public DateTime? LastDay { get; set; }
+        public DateTime LastDay { get; set; }
+
+        public bool AppliesToGrade(string grade)
+        {
+            int.TryParse(grade, out int intGrade);
+            int.TryParse(StartGrade, out int intStartGrade);
+            int.TryParse(EndGrade, out int intEndGrade);
+
+            return intGrade >= intStartGrade && intGrade <= intEndGrade;
+        }
+
+        public int GetSchoolDays(AppDbContext context, DateTime from, DateTime to)
+        {
+            var totalDays = 0;
+
+            //TODO: Is this going to be a performance problem for the year end reconciliation? Any more efficient way to do this?
+            for (var date = from.Date; date <= to; date = date.AddDays(1))
+            {
+                // If this date is before the first day of the school year or after the last day of the school year, skip it.
+                if (date.Date < FirstDay.Date || date.Date > LastDay.Date)
+                    continue;
+
+                // If this is a holiday, skip it.
+                if (context.CharterSchoolScheduleDates.Any(d => d.CharterSchoolScheduleUid == CharterSchoolScheduleUid && d.Date.Date == date.Date))
+                    continue;
+
+                // If this is a weekday, add to the total days.
+                if (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday)
+                    totalDays++;
+            }
+
+            return totalDays;
+        }
     }
 }

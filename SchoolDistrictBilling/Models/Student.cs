@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using SchoolDistrictBilling.Data;
 
 namespace SchoolDistrictBilling.Models
 {
@@ -105,11 +106,53 @@ namespace SchoolDistrictBilling.Models
         [Display(Name = "School District")]
         public string Aun { get; set; }
 
-        public decimal GetMonthlyAttendanceValue(int month, int year, List<CharterSchoolScheduleDate> holidays)
+        public int GetAttendanceCount(AppDbContext context, int year)
         {
+            if (DistrictEntryDate == null)
+            {
+                throw new Exception("Student " + StateStudentNo + " does not have a district entry date.");
+            }
 
+            var schedule = context.GetCharterSchoolSchedule(CharterSchoolUid, Grade, year);
+
+            if (DistrictEntryDate >= schedule.FirstDay && (ExitDate != null && ExitDate <= schedule.LastDay))
+            {
+                return schedule.GetSchoolDays(context, (DateTime)DistrictEntryDate, (DateTime)ExitDate);
+            }
+            else if (DistrictEntryDate >= schedule.FirstDay)
+            {
+                return schedule.GetSchoolDays(context, (DateTime)DistrictEntryDate, schedule.LastDay);
+            }
+            else if (ExitDate != null && ExitDate <= schedule.LastDay)
+            {
+                return schedule.GetSchoolDays(context, schedule.FirstDay, (DateTime)ExitDate);
+            }
+            else
+            {
+                return schedule.GetSchoolDays(context, schedule.FirstDay, schedule.LastDay);
+            }
+        }
+
+        public int GetDaysInSession(AppDbContext context, int year)
+        {
+            if (DistrictEntryDate == null)
+            {
+                throw new Exception("Student " + StateStudentNo + " does not have a district entry date.");
+            }
+
+            var schedule = context.GetCharterSchoolSchedule(CharterSchoolUid, Grade, year);
+            return schedule.GetSchoolDays(context, schedule.FirstDay, schedule.LastDay);
+        }
+
+        public decimal GetMonthlyAttendanceValue(AppDbContext context, int month, int year)
+        {
             DateTime firstDayOfMonth = new DateTime(year, month, 1);
             DateTime lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1).Date.AddHours(23).AddMinutes(59).AddSeconds(59);
+
+            if (DistrictEntryDate == null)
+            {
+                throw new Exception("Student " + StateStudentNo + " does not have a district entry date.");
+            }
 
             if (DistrictEntryDate <= firstDayOfMonth && (ExitDate == null || ExitDate >= lastDayOfMonth))
             {
@@ -118,39 +161,22 @@ namespace SchoolDistrictBilling.Models
             }
             else
             {
-                var daysInMonth = GetSchoolDays(firstDayOfMonth, lastDayOfMonth, holidays);
+                var schedule = context.GetCharterSchoolSchedule(CharterSchoolUid, Grade, month, year);
 
-                // TODO: If the student enrolled or exited mid-month, need to prorate their enrollment
-                // for the actual days they attended.
+                var daysInMonth = schedule.GetSchoolDays(context, firstDayOfMonth, lastDayOfMonth);
+
+                //TODO: Account for scenario where student entered and exited withint the month!!!
                 // Student started mid-month
                 if (DistrictEntryDate >= firstDayOfMonth)
                 {
-                    return decimal.Round(GetSchoolDays((DateTime)DistrictEntryDate, lastDayOfMonth, holidays) / daysInMonth, 3);
+                    return decimal.Round(schedule.GetSchoolDays(context, (DateTime)DistrictEntryDate, lastDayOfMonth) / daysInMonth, 3);
                 }
                 // Student exited mid-month
                 else
                 {
-                    DateTime exitDate = (DateTime)ExitDate;
-                    return decimal.Round(GetSchoolDays(firstDayOfMonth, exitDate, holidays) / daysInMonth, 3);
+                    return decimal.Round(schedule.GetSchoolDays(context, firstDayOfMonth, (DateTime)ExitDate) / daysInMonth, 3);
                 }
             }
-        }
-
-        private int GetSchoolDays(DateTime from, DateTime to, List<CharterSchoolScheduleDate> holidays)
-        {
-            var totalDays = 0;
-            for (var date = from; date < to; date = date.AddDays(1))
-            {
-                // If this is a holiday, skip it.
-                if (holidays.Any(d => d.Date == date.Date))
-                    continue;
-
-                // If this is a weekday, add to the total days.
-                if (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday)
-                    totalDays++;
-            }
-
-            return totalDays;
         }
 
         public void CopyPropertiesFrom(Student student)

@@ -8,9 +8,7 @@ namespace SchoolDistrictBilling.Models
     [Table("charter_school_schedule_date")]
     public class CharterSchoolScheduleDate
     {
-        public CharterSchoolScheduleDate()
-        {
-        }
+        public CharterSchoolScheduleDate() { }
 
         [Column("charter_school_schedule_date_uid")]
         [Key]

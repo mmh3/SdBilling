@@ -29,17 +29,14 @@ namespace SchoolDistrictBilling.Controllers
         {
             List<CharterSchool> charterSchools = await _context.CharterSchools.ToListAsync();
 
-            return View(new MonthlyInvoiceView(charterSchools));
+            return View(new ReportCriteriaView(charterSchools));
         }
 
         [HttpGet]
         public IActionResult GetSchoolDistricts(int charterSchoolUid)
         {
             // Get a list containing one student per school district for the given charter school.
-            var schoolDistrictAuns = _context.Students.Where(s => s.CharterSchoolUid == charterSchoolUid)
-                .Select(s => s.Aun)
-                .Distinct()
-                .ToList();
+            var schoolDistrictAuns = _context.GetAunsForCharterSchool(charterSchoolUid);
 
             // Get a list of the school districts that the given charter school may need to bill.
             var schoolDistricts = _context.SchoolDistricts.Where(sd => schoolDistrictAuns.Contains(sd.Aun)).ToList();
@@ -51,7 +48,7 @@ namespace SchoolDistrictBilling.Controllers
         // POST: MonthlyInvoice
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public FileResult Generate(MonthlyInvoiceView criteria)
+        public FileResult Generate(ReportCriteriaView criteria)
         {
             if (!ModelState.IsValid)
             {
@@ -73,8 +70,10 @@ namespace SchoolDistrictBilling.Controllers
 
             //TODO: do we want a summary page here or something?
             //List<CharterSchool> charterSchools = await _context.CharterSchools.ToListAsync();
-            //return View("Index", new MonthlyInvoiceView(charterSchools));
+            //return View("Index", new ReportCriteriaView(charterSchools));
 
+
+            //TODO: Is there a better way to do this? Create temp folder if it's not there - don't want error when deploying.
             var archive = _hostEnvironment.WebRootPath + "/archive.zip";
             var temp = _hostEnvironment.WebRootPath + "/temp";
 
@@ -92,7 +91,7 @@ namespace SchoolDistrictBilling.Controllers
             // create a new archive
             ZipFile.CreateFromDirectory(temp, archive);
 
-            return File("/archive.zip", "application/zip", "archive.zip");
+            return File("/archive.zip", "application/zip", "invoices.zip");
         }
     }
 }

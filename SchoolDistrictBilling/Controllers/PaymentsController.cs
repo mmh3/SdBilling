@@ -101,9 +101,7 @@ namespace SchoolDistrictBilling.Controllers
             }
 
             // Get the list of aun's for this charter school
-            var schoolDistrictAuns = _context.Students.Where(s => s.CharterSchoolUid == payment.CharterSchoolUid)
-                                                          .Select(x => x.Aun)
-                                                          .Distinct().ToList();
+            var schoolDistrictAuns = _context.GetAunsForCharterSchool(payment.CharterSchoolUid);
             // Get the list of charter schools based on the list of AUNs
             var schoolDistricts = _context.SchoolDistricts.Where(sd => schoolDistrictAuns.Contains(sd.Aun)).ToList();
 
@@ -165,10 +163,7 @@ namespace SchoolDistrictBilling.Controllers
                                                           .FirstOrDefault();
 
             // Get a list containing one student per school district for the given charter school.
-            var schoolDistrictAuns = _context.Students.Where(s => s.CharterSchoolUid == charterSchoolUid)
-                .Select(s => s.Aun)
-                .Distinct()
-                .ToList();
+            var schoolDistrictAuns = _context.GetAunsForCharterSchool(charterSchoolUid);
 
             // Get a list of the school districts that the given charter school may need to bill.
             var schoolDistricts = _context.SchoolDistricts.Where(sd => schoolDistrictAuns.Contains(sd.Aun)).ToList();

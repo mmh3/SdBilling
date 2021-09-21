@@ -1,6 +1,6 @@
 ﻿@model SchoolDistrictBilling.Models.ReportCriteriaView
 
-<h2>Generate Monthly Invoices</h2>
+<h2>Year End Reconciliation</h2>
 
 <br />
 
@@ -20,14 +20,14 @@
     </div>
 
     <div class="row form-group">
-        <label asp-for="Month" class="col-md-2 col-form-label"></label>
-        <div class="col-md-2">
+        <label asp-for="Year" class="col-md-2 col-form-label"></label>
+        <!--<div class="col-md-2">
             <select id="drpMonth" class="form-control" asp-for="Month" asp-items="@(new SelectList(Model.Months, Model.CurrentMonth))">
             </select>
             <input type="hidden" asp-for="Month" />
-        </div>
+        </div>-->
         <div class="col-md-2">
-            <select id="drpYear" class="form-control" asp-for="Year" asp-items="@(new SelectList(Model.Years, Model.CurrentYear))">
+            <select id="drpYear" class="form-control" asp-for="Year" asp-items="@(new SelectList(Model.YearEndYears, Model.CurrentYear))">
             </select>
             <input type="hidden" asp-for="Year" />
         </div>
@@ -51,7 +51,7 @@
     </div>
 
     <div class="row form-group">
-        <input type="submit" value="Generate Invoices" class="btn btn-primary" />
+        <input type="submit" value="Generate Reports" class="btn btn-primary" />
     </div>
 </form>
 
