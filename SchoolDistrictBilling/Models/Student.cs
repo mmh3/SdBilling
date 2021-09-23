@@ -62,8 +62,7 @@ namespace SchoolDistrictBilling.Models
         public DateTime? Dob { get; set; }
 
         [Column("grade")]
-        [StringLength(1)]
-        //TODO: Make Grade char(2)
+        [StringLength(2)]
         public string Grade { get; set; }
 
         [Column("district_entry_date")]
