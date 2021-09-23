@@ -17,6 +17,9 @@
                 @Html.DisplayNameFor(model => model.SchoolDistrictUid)
             </th>
             <th>
+                @Html.DisplayNameFor(model => model.Aun)
+            </th>
+            <th>
                 @Html.DisplayNameFor(model => model.Name)
             </th>
             <th></th>
@@ -25,18 +28,21 @@
     <tbody>
         @foreach (var item in Model)
         {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.SchoolDistrictUid)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Name)
-                </td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.SchoolDistrictUid">Edit</a> |
-                    <a asp-action="Delete" asp-route-id="@item.SchoolDistrictUid">Delete</a>
-                </td>
-            </tr>
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.SchoolDistrictUid)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Aun)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.SchoolDistrictUid">Edit</a> |
+                <a asp-action="Delete" asp-route-id="@item.SchoolDistrictUid">Delete</a>
+            </td>
+        </tr>
         }
     </tbody>
 </table>

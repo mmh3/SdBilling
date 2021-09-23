@@ -37,15 +37,48 @@
 
         <input type="hidden" asp-for="CharterSchool.CharterSchoolUid" />
 
-        <div class="row">
+        <div class="row form-group">
+            <label asp-for="CharterSchool.Name" class="col-md-1 control-label"></label>
             <div class="col-md-4">
-                <div class="form-group">
-                    <label asp-for="CharterSchool.Name" class="control-label"></label>
-                    <input asp-for="CharterSchool.Name" class="form-control" />
-                    <span asp-validation-for="CharterSchool.Name" class="text-danger"></span>
-                </div>
+                <input asp-for="CharterSchool.Name" class="form-control" />
+                <span asp-validation-for="CharterSchool.Name" class="text-danger"></span>
             </div>
         </div>
+
+        <div class="row form-group">
+            <label asp-for="CharterSchool.AddressStreet" class="col-md-1 control-label"></label>
+            <div class="col-md-5">
+                <input asp-for="CharterSchool.AddressStreet" class="form-control" />
+                <span asp-validation-for="CharterSchool.AddressStreet" class="text-danger"></span>
+            </div>
+
+            <label asp-for="CharterSchool.Phone" class="col-md-1 control-label"></label>
+            <div class="col-md-2">
+                <input asp-for="CharterSchool.Phone" class="form-control" />
+                <span asp-validation-for="CharterSchool.Phone" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="row form-group">
+            <label asp-for="CharterSchool.AddressCity" class="col-md-1 control-label"></label>
+            <div class="col-md-3">
+                <input asp-for="CharterSchool.AddressCity" class="form-control" />
+                <span asp-validation-for="CharterSchool.AddressCity" class="text-danger"></span>
+            </div>
+
+            <label asp-for="CharterSchool.AddressState" class="col-md-1 control-label"></label>
+            <div class="col-md-1">
+                <input asp-for="CharterSchool.AddressState" class="form-control" />
+                <span asp-validation-for="CharterSchool.AddressState" class="text-danger"></span>
+            </div>
+
+            <label asp-for="CharterSchool.AddressZip" class="col-md-1 control-label"></label>
+            <div class="col-md-2">
+                <input asp-for="CharterSchool.AddressZip" class="form-control" />
+                <span asp-validation-for="CharterSchool.AddressZip" class="text-danger"></span>
+            </div>
+        </div>
+
 
         <hr />
         <h4>School Calendar(s)</h4>

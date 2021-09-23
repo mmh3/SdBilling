@@ -33,7 +33,7 @@ namespace SchoolDistrictBilling.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name")] SchoolDistrict schoolDistrict)
+        public async Task<IActionResult> Create(SchoolDistrict schoolDistrict)
         {
             if (ModelState.IsValid)
             {

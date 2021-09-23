@@ -6,42 +6,57 @@
 
 <h4>Create Charter School</h4>
 <hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            @*<input type="hidden" asp-for="ID" />
-                <div class="form-group">
-                    <label asp-for="LastName" class="control-label"></label>
-                    <input asp-for="LastName" class="form-control" />
-                    <span asp-validation-for="LastName" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <label asp-for="FirstMidName" class="control-label"></label>
-                    <input asp-for="FirstMidName" class="form-control" />
-                    <span asp-validation-for="FirstMidName" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <label asp-for="EnrollmentDate" class="control-label"></label>
-                    <input asp-for="EnrollmentDate" class="form-control" />
-                    <span asp-validation-for="EnrollmentDate" class="text-danger"></span>
-                </div>*@
-            @*<div class="form-group">
-                <label asp-for="CharterSchoolUid" class="control-label"></label>
-                <input asp-for="CharterSchoolUid" class="form-control" />
-                <span asp-validation-for="CharterSchoolUid" class="text-danger"></span>
-            </div>*@
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+
+<form asp-action="Create" runat="server">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="row form-group">
+        <label asp-for="Name" class="col-md-1 control-label"></label>
+        <div class="col-md-4">
+            <input asp-for="Name" class="form-control" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
     </div>
-</div>
+
+    <div class="row form-group">
+        <label asp-for="AddressStreet" class="col-md-1 control-label"></label>
+        <div class="col-md-5">
+            <input asp-for="AddressStreet" class="form-control" />
+            <span asp-validation-for="AddressStreet" class="text-danger"></span>
+        </div>
+
+        <label asp-for="Phone" class="col-md-1 control-label"></label>
+        <div class="col-md-2">
+            <input asp-for="Phone" class="form-control" />
+            <span asp-validation-for="Phone" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row form-group">
+        <label asp-for="AddressCity" class="col-md-1 control-label"></label>
+        <div class="col-md-3">
+            <input asp-for="AddressCity" class="form-control" />
+            <span asp-validation-for="AddressCity" class="text-danger"></span>
+        </div>
+
+        <label asp-for="AddressState" class="col-md-1 control-label"></label>
+        <div class="col-md-1">
+            <input asp-for="AddressState" class="form-control" />
+            <span asp-validation-for="AddressState" class="text-danger"></span>
+        </div>
+
+        <label asp-for="AddressZip" class="col-md-1 control-label"></label>
+        <div class="col-md-2">
+            <input asp-for="AddressZip" class="form-control" />
+            <span asp-validation-for="AddressZip" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <input type="submit" value="Create" class="btn btn-primary" />
+    </div>
+</form>
+
 
 <div>
     <a asp-action="Index">Back to List</a>
