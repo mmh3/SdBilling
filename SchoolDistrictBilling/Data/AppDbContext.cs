@@ -17,6 +17,9 @@ namespace SchoolDistrictBilling.Data
         public DbSet<CharterSchoolSchedule> CharterSchoolSchedules { get; set; }
         public DbSet<CharterSchoolScheduleDate> CharterSchoolScheduleDates { get; set; }
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<CharterSchoolContact> CharterSchoolContacts { get; set; }
+        public DbSet<SchoolDistrictContact> SchoolDistrictContacts { get; set; }
+
 
         // Get the list of school district AUNs for a given charter school.
         public List<string> GetAunsForCharterSchool(int charterSchoolUid)

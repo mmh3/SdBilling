@@ -107,6 +107,7 @@ namespace SchoolDistrictBilling.Controllers
 
             view.CharterSchoolSchedules = schedules;
             view.CharterSchoolScheduleDates = dates.ToList();
+            view.Contacts = _context.CharterSchoolContacts.Where(c => c.CharterSchoolUid == charterSchool.CharterSchoolUid).ToList();
 
             return View(view);
         }
@@ -132,6 +133,11 @@ namespace SchoolDistrictBilling.Controllers
                     foreach (var schedule in view.CharterSchoolSchedules)
                     {
                         _context.Update(schedule);
+                    }
+
+                    foreach (var contact in view.Contacts)
+                    {
+                        _context.Update(contact);
                     }
 
                     await _context.SaveChangesAsync();
@@ -183,6 +189,24 @@ namespace SchoolDistrictBilling.Controllers
             _context.CharterSchools.Remove(charterSchool);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> CreateContact(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var contact = new CharterSchoolContact()
+            {
+                CharterSchoolUid = (int)id
+            };
+
+            _context.Add(contact);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Edit), new { id = id });
         }
 
         public async Task<IActionResult> CreateSchedule(int? id)

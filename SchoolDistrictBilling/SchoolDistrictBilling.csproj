@@ -40,5 +40,8 @@
     <Content Remove="wwwroot\reports\2021\August\FirstTestCharterSchool\August2021BradfordAreaSD.xlsx" />
     <Content Remove="wwwroot\reports\2021\August\FirstTestCharterSchool\August2021BrandywineHeightsAreaSD.xlsx" />
     <Content Remove="wwwroot\reports\2021\September\FirstTestCharterSchool\~%24September2021BlueMountainSD.xlsx" />
+    <Content Remove="wwwroot\archive.zip" />
+    <Content Remove="wwwroot\reports\FirstTestCharterSchool\2022\2022BradfordAreaSDYearEnd.xlsx" />
+    <Content Remove="wwwroot\reports\FirstTestCharterSchool\2022\2022AliquippaSDYearEnd.xlsx" />
   </ItemGroup>
 </Project>

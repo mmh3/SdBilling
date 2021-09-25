@@ -28,8 +28,10 @@
     </style>
 </head>
 
-<body>
-    <h4>Edit Charter School</h4>
+<body style="margin-bottom:60px;">
+    <div class="row">
+        <h4>Edit Charter School</h4>
+    </div>
     <hr />
 
     <form asp-action="Edit" runat="server">
@@ -81,8 +83,53 @@
 
 
         <hr />
-        <h4>School Calendar(s)</h4>
-        <a asp-action="CreateSchedule" asp-route-id="@Model.CharterSchool.CharterSchoolUid" class="link">Add</a>
+        <div class="row">
+            <h4>Contacts</h4>
+            <span style="width:50px;display:inline-block"></span>
+            <h4><a asp-action="CreateContact" asp-route-id="@Model.CharterSchool.CharterSchoolUid" class="link">Add</a></h4>
+        </div>
+
+        @for (var i = 0; i < Model.Contacts.Count(); i++)
+        {
+            <div class="form-group">
+                <div class="row">
+
+                    <input type="hidden" asp-for="@Model.Contacts[i].CharterSchoolUid" />
+                    <input type="hidden" asp-for="@Model.Contacts[i].CharterSchoolContactUid" />
+
+                    <div class="col-md-3">
+                        <label asp-for="@Model.Contacts[i].Name" class="control-label"></label>
+                        <input asp-for="@Model.Contacts[i].Name" class="form-control" />
+                        <span asp-validation-for="@Model.Contacts[i].Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="@Model.Contacts[i].Email" class="control-label"></label>
+                        <input asp-for="@Model.Contacts[i].Email" class="form-control" />
+                        <span asp-validation-for="@Model.Contacts[i].Email" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="@Model.Contacts[i].Phone" class="control-label"></label>
+                        <input asp-for="@Model.Contacts[i].Phone" class="form-control" />
+                        <span asp-validation-for="@Model.Contacts[i].Phone" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-sm-1">
+                        <label asp-for="@Model.Contacts[i].PrimaryFlag" class="control-label"></label>
+                        <input asp-for="@Model.Contacts[i].PrimaryFlag" class="form-control" />
+                        <span asp-validation-for="@Model.Contacts[i].PrimaryFlag" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        }
+
+
+        <hr />
+        <div class="row">
+            <h4>School Calendar(s)</h4>
+            <span style="width:50px;display:inline-block"></span>
+            <h4><a asp-action="CreateSchedule" asp-route-id="@Model.CharterSchool.CharterSchoolUid" class="link">Add</a></h4>
+        </div>
 
         @for (var i = 0; i < Model.CharterSchoolSchedules.Count(); i++)
         {

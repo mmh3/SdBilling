@@ -86,7 +86,8 @@ namespace SchoolDistrictBilling.Controllers
             {
                 return NotFound();
             }
-            return View(schoolDistrict);
+
+            return View(new SchoolDistrictView(_context, schoolDistrict));
         }
 
         // POST: SchoolDistricts/Edit/5
@@ -94,9 +95,9 @@ namespace SchoolDistrictBilling.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, SchoolDistrict schoolDistrict)
+        public async Task<IActionResult> Edit(int id, SchoolDistrictView view)
         {
-            if (id != schoolDistrict.SchoolDistrictUid)
+            if (id != view.SchoolDistrict.SchoolDistrictUid)
             {
                 return NotFound();
             }
@@ -109,12 +110,18 @@ namespace SchoolDistrictBilling.Controllers
             {
                 try
                 {
-                    _context.Update(schoolDistrict);
+                    _context.Update(view.SchoolDistrict);
+
+                    foreach (var contact in view.Contacts)
+                    {
+                        _context.Update(contact);
+                    }
+
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!SchoolDistrictExists(schoolDistrict.SchoolDistrictUid))
+                    if (!SchoolDistrictExists(view.SchoolDistrict.SchoolDistrictUid))
                     {
                         return NotFound();
                     }
@@ -126,11 +133,29 @@ namespace SchoolDistrictBilling.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            return View(schoolDistrict);
+            return View(view);
         }
         private bool SchoolDistrictExists(int uid)
         {
             return _context.SchoolDistricts.Any(sd => sd.SchoolDistrictUid == uid);
+        }
+
+        public async Task<IActionResult> CreateContact(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var contact = new SchoolDistrictContact()
+            {
+                SchoolDistrictUid = (int)id
+            };
+
+            _context.Add(contact);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Edit), new { id = id });
         }
     }
 }

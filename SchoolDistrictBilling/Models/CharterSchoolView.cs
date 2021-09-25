@@ -13,6 +13,7 @@ namespace SchoolDistrictBilling.Models
         public int? CurrentScheduleUid { get; set; }
 
         public CharterSchool CharterSchool { get; set; } = new CharterSchool();
+        public List<CharterSchoolContact> Contacts { get; set; } = new List<CharterSchoolContact>();
         public List<CharterSchoolSchedule> CharterSchoolSchedules { get; set; } = new List<CharterSchoolSchedule>();
         public List<CharterSchoolScheduleDate> CharterSchoolScheduleDates { get; set; } = new List<CharterSchoolScheduleDate>();
     }
