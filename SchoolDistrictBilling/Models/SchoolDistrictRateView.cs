@@ -11,6 +11,11 @@ namespace SchoolDistrictBilling.Models
             SchoolDistrictRate = rate;
             SchoolDistrict = context.SchoolDistricts.Where(sd => sd.SchoolDistrictUid == rate.SchoolDistrictUid).FirstOrDefault();
         }
+        public SchoolDistrictRateView(SchoolDistrict sd, SchoolDistrictRate rate)
+        {
+            SchoolDistrict = sd;
+            SchoolDistrictRate = rate;
+        }
 
         public SchoolDistrict SchoolDistrict { get; set; } = new SchoolDistrict();
         public SchoolDistrictRate SchoolDistrictRate { get; set; } = new SchoolDistrictRate();

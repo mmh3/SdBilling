@@ -306,8 +306,6 @@ namespace SchoolDistrictBilling.Services
                     reconSheet.Cells["A5"].Value = aun;
                     reconSheet.Cells["A6"].Value = schoolDistrictName;
 
-                    PopulateAdm(reconSheet, context.GetSchoolDistrictRate(schoolDistrict.SchoolDistrictUid), "G10");
-
                     // Select all students for this charter school and school district.
                     var students = context.GetStudents(criteria.CharterSchoolUid, aun);
 
@@ -316,10 +314,12 @@ namespace SchoolDistrictBilling.Services
                     int nonSpedStudentCount = 0;
                     int nonSpedStudentMembershipDays = 0;
                     int nonSpedStudentTotalDaysInSession = 0;
+                    DateTime lastDayOfYear = DateTime.Now.Date;
+
                     foreach (var student in nonSpedStudents)
                     {
                         nonSpedStudentCount++;
-                        nonSpedStudentMembershipDays += student.GetAttendanceCount(context, int.Parse(criteria.Year));
+                        nonSpedStudentMembershipDays += student.GetAttendanceCount(context, int.Parse(criteria.Year), out lastDayOfYear);
                         if (nonSpedStudentTotalDaysInSession == 0)
                         {
                             nonSpedStudentTotalDaysInSession = student.GetDaysInSession(context, int.Parse(criteria.Year));
@@ -333,12 +333,14 @@ namespace SchoolDistrictBilling.Services
                     foreach (var student in spedStudents)
                     {
                         spedStudentCount++;
-                        spedStudentMembershipDays += student.GetAttendanceCount(context, int.Parse(criteria.Year));
+                        spedStudentMembershipDays += student.GetAttendanceCount(context, int.Parse(criteria.Year), out lastDayOfYear);
                         if (spedStudentTotalDaysInSession == 0)
                         {
                             spedStudentTotalDaysInSession = student.GetDaysInSession(context, int.Parse(criteria.Year));
                         }
                     }
+
+                    PopulateAdm(reconSheet, context.GetSchoolDistrictRate(schoolDistrict.SchoolDistrictUid, lastDayOfYear), "G10");
 
                     if (nonSpedStudentTotalDaysInSession == 0) nonSpedStudentTotalDaysInSession = spedStudentTotalDaysInSession;
                     if (spedStudentTotalDaysInSession == 0) spedStudentTotalDaysInSession = nonSpedStudentTotalDaysInSession;
@@ -461,7 +463,7 @@ namespace SchoolDistrictBilling.Services
                         // Select all students for this charter school and school district.
                         var students = context.GetStudents(criteria.CharterSchoolUid, aun);
                         // Get the school district billing rate record for this school district.
-                        var schoolDistrictRate = context.GetSchoolDistrictRate(schoolDistrict.SchoolDistrictUid);
+                        var schoolDistrictRate = context.GetSchoolDistrictRate(schoolDistrict.SchoolDistrictUid, criteria.LastDayOfMonth());
 
                         PopulateInvoiceSheet(context, invoiceSheet, criteria, students, schoolDistrictRate);
                         PopulateStudentSheet(studentSheet, students);
@@ -705,7 +707,7 @@ namespace SchoolDistrictBilling.Services
         private static void PopulateStudentSheet(ExcelWorksheet sheet, List<Student> students)
         {
             //TODO: this is just for testing for now
-            //for (int j = 0; j < 24; j++)
+            //for (int j = 0; j < 421; j++)
             //{
             //    students.Add(students[0]);
             //}
@@ -724,13 +726,13 @@ namespace SchoolDistrictBilling.Services
 
             if (counter % 8 == 0)
             {
-                var copyStartRow = (sheetNum * 46 + 1).ToString();
-                var copyEndRow = (sheetNum * 46 + 93).ToString();
-                sheet.Cells["A1:K46"].Copy(sheet.Cells["A" + copyStartRow + ":K" + copyEndRow]);
-                ClearCopiedSheet(sheet, sheetNum);
+                var copyStartRow = (sheetNum * 43 + 1).ToString();
+                var copyEndRow = (sheetNum * 43 + 93).ToString();
+                sheet.Cells["A1:K43"].Copy(sheet.Cells["A" + copyStartRow + ":K" + copyEndRow]);
+                ClearAndFormatCopiedSheet(sheet, sheetNum);
             }
 
-            var row = (sheetNum * 46) + 12 + ((counter % 8) * 4);
+            var row = (sheetNum * 43) + 12 + ((counter % 8) * 4);
             var firstRow = row.ToString();
             var secondRow = (row + 1).ToString();
             var thirdRow = (row + 2).ToString();
@@ -752,15 +754,33 @@ namespace SchoolDistrictBilling.Services
             sheet.Cells["K" + fourthRow].Value = student.PriorIepDate;
         }
 
-        private static void ClearCopiedSheet(ExcelWorksheet sheet, decimal sheetNum)
+        private static void ClearAndFormatCopiedSheet(ExcelWorksheet sheet, decimal sheetNum)
         {
+            int row = (int)(sheetNum * 43) + 1;
+            sheet.Row(row).Height = 13;
+            sheet.Row(++row).Height = 14;
+            sheet.Row(++row).Height = 13;
+            sheet.Row(++row).Height = 13;
+            sheet.Row(++row).Height = 13;
+            sheet.Row(++row).Height = 13;
+            sheet.Row(++row).Height = 10;
+            sheet.Row(++row).Height = 12;
+            sheet.Row(++row).Height = 12;
+            sheet.Row(++row).Height = 12;
+            sheet.Row(++row).Height = 12;
+
             for (int i = 0; i < 8; i++)
             {
-                var row = (sheetNum * 46) + 12 + ((i % 8) * 4);
-                var firstRow = row.ToString();
-                var secondRow = (row + 1).ToString();
-                var thirdRow = (row + 2).ToString();
-                var fourthRow = (row + 3).ToString();
+                var studentFirstRow = (sheetNum * 43) + 12 + ((i % 8) * 4);
+                var firstRow = studentFirstRow.ToString();
+                var secondRow = (studentFirstRow + 1).ToString();
+                var thirdRow = (studentFirstRow + 2).ToString();
+                var fourthRow = (studentFirstRow + 3).ToString();
+
+                sheet.Row(int.Parse(firstRow)).Height = 13;
+                sheet.Row(int.Parse(secondRow)).Height = 13;
+                sheet.Row(int.Parse(thirdRow)).Height = 13;
+                sheet.Row(int.Parse(fourthRow)).Height = 13;
 
                 sheet.Cells["C" + secondRow].Value = string.Empty;
                 sheet.Cells["D" + firstRow].Value = string.Empty;

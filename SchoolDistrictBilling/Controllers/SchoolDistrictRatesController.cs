@@ -28,14 +28,38 @@ namespace SchoolDistrictBilling.Controllers
             List<SchoolDistrictRate> schoolDistrictRates = await _context.SchoolDistrictRates.ToListAsync();
 
             //TODO: Only select the latest rate for each school district.
-            var viewModel = from d in schoolDistricts
-                            join r in schoolDistrictRates on d.SchoolDistrictUid equals r.SchoolDistrictUid into table1
-                            from r in table1.ToList()
-                            select new SchoolDistrictRateView
-                            {
-                                SchoolDistrict = d,
-                                SchoolDistrictRate = r
-                            };
+            //var viewModel = from d in schoolDistricts
+            //                join r in schoolDistrictRates on d.SchoolDistrictUid equals r.SchoolDistrictUid into table1
+            //                from r in table1.ToList()
+            //                select new SchoolDistrictRateView
+            //                {
+            //                    SchoolDistrict = d,
+            //                    SchoolDistrictRate = r
+            //                };
+
+            //TODO: How to get this using linq to be more efficient?
+            //var viewModel = from r in schoolDistrictRates
+            //                join d in schoolDistricts on r.SchoolDistrictUid equals d.SchoolDistrictUid into table1
+            //                //from x in table1.ToList()
+            //                where r.EffectiveDate == table1.Max(x => x.EffectiveDate)
+            //                select new SchoolDistrictRateView
+            //                {
+            //                    SchoolDistrict = 
+            //                };
+
+            var viewModel = new List<SchoolDistrictRateView>();
+            foreach(var school in schoolDistricts)
+            {
+                var rates = schoolDistrictRates.Where(r => r.SchoolDistrictUid == school.SchoolDistrictUid);
+                if (rates.Count() == 0)
+                {
+                    continue;
+                }
+                var maxDate = rates.Max(r => r.EffectiveDate);
+                var rate = rates.First(r => r.EffectiveDate == maxDate);
+
+                viewModel.Add(new SchoolDistrictRateView(school, rate));
+            }
 
             return View(viewModel);
         }

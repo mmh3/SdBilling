@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -37,6 +38,14 @@ namespace SchoolDistrictBilling.Models
         public void OnGet()
         {
             SchoolDistrictList = new SelectList(SchoolDistricts, nameof(SchoolDistrict.SchoolDistrictUid), nameof(SchoolDistrict.Name));
+        }
+
+        public DateTime LastDayOfMonth()
+        {
+            // Get the int representation of the month
+            var month = DateTime.ParseExact(Month, "MMMM", CultureInfo.CurrentCulture).Month;
+
+            return new DateTime(int.Parse(Year), month, 1).AddMonths(1).AddDays(-1).Date.AddHours(23).AddMinutes(59).AddSeconds(59);
         }
     }
 }

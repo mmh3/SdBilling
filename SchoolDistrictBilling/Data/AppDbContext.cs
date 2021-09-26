@@ -41,9 +41,10 @@ namespace SchoolDistrictBilling.Data
         }
 
         // Get the school district billing rate record for this school district.
-        public SchoolDistrictRate GetSchoolDistrictRate(int schoolDistrictUid)
+        public SchoolDistrictRate GetSchoolDistrictRate(int schoolDistrictUid, DateTime asOfDate)
         {
-            return SchoolDistrictRates.Where(r => r.SchoolDistrictUid == schoolDistrictUid)
+            return SchoolDistrictRates.Where(r => r.SchoolDistrictUid == schoolDistrictUid &&
+                                                  r.EffectiveDate <= asOfDate)
                                       .OrderByDescending(x => x.EffectiveDate)
                                       .FirstOrDefault();
         }

@@ -105,7 +105,7 @@ namespace SchoolDistrictBilling.Models
         [Display(Name = "School District")]
         public string Aun { get; set; }
 
-        public int GetAttendanceCount(AppDbContext context, int year)
+        public int GetAttendanceCount(AppDbContext context, int year, out DateTime lastDayOfYear)
         {
             if (DistrictEntryDate == null)
             {
@@ -113,6 +113,7 @@ namespace SchoolDistrictBilling.Models
             }
 
             var schedule = context.GetCharterSchoolSchedule(CharterSchoolUid, Grade, year);
+            lastDayOfYear = schedule.LastDay.Date;
 
             if (DistrictEntryDate >= schedule.FirstDay && (ExitDate != null && ExitDate <= schedule.LastDay))
             {
