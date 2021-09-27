@@ -291,7 +291,7 @@ namespace SchoolDistrictBilling.Services
                 // Get the list of school district AUNs we're reconciling.
                 var sdAuns = context.GetAunsForCharterSchool(criteria.CharterSchoolUid);
 
-                foreach(var aun in sdAuns)
+                foreach (var aun in sdAuns)
                 {
                     var schoolDistrict = context.SchoolDistricts.Where(sd => sd.Aun == aun).FirstOrDefault();
                     var schoolDistrictName = schoolDistrict.Name;
@@ -488,7 +488,7 @@ namespace SchoolDistrictBilling.Services
                     }
                 }
 
-                return Directory.EnumerateFiles(GetReportPath(ReportType.Invoice, rootPath, criteria, charterSchoolName));
+                return Directory.EnumerateFiles(GetReportPath(ReportType.Invoice, rootPath, criteria, charterSchoolName), "*.pdf");
             }
         }
 
@@ -726,13 +726,13 @@ namespace SchoolDistrictBilling.Services
 
             if (counter % 8 == 0)
             {
-                var copyStartRow = (sheetNum * 43 + 1).ToString();
-                var copyEndRow = (sheetNum * 43 + 93).ToString();
-                sheet.Cells["A1:K43"].Copy(sheet.Cells["A" + copyStartRow + ":K" + copyEndRow]);
+                var copyStartRow = (sheetNum * 44 + 1).ToString();
+                var copyEndRow = (sheetNum * 44 + 93).ToString();
+                sheet.Cells["A1:K44"].Copy(sheet.Cells["A" + copyStartRow + ":K" + copyEndRow]);
                 ClearAndFormatCopiedSheet(sheet, sheetNum);
             }
 
-            var row = (sheetNum * 43) + 12 + ((counter % 8) * 4);
+            var row = (sheetNum * 44) + 12 + ((counter % 8) * 4);
             var firstRow = row.ToString();
             var secondRow = (row + 1).ToString();
             var thirdRow = (row + 2).ToString();
@@ -756,7 +756,7 @@ namespace SchoolDistrictBilling.Services
 
         private static void ClearAndFormatCopiedSheet(ExcelWorksheet sheet, decimal sheetNum)
         {
-            int row = (int)(sheetNum * 43) + 1;
+            int row = (int)(sheetNum * 44) + 1;
             sheet.Row(row).Height = 13;
             sheet.Row(++row).Height = 14;
             sheet.Row(++row).Height = 13;
@@ -771,7 +771,7 @@ namespace SchoolDistrictBilling.Services
 
             for (int i = 0; i < 8; i++)
             {
-                var studentFirstRow = (sheetNum * 43) + 12 + ((i % 8) * 4);
+                var studentFirstRow = (sheetNum * 44) + 12 + ((i % 8) * 4);
                 var firstRow = studentFirstRow.ToString();
                 var secondRow = (studentFirstRow + 1).ToString();
                 var thirdRow = (studentFirstRow + 2).ToString();
@@ -966,20 +966,22 @@ namespace SchoolDistrictBilling.Services
             FileInfo outputFile = new FileInfo(fileName);
             excel.SaveAs(outputFile);
 
+            ConvertFileToPdf(fileName);
+
             return outputFile;
-            //ConvertFileToPdf(fileName);
         }
 
         private static void ConvertFileToPdf(string fileName)
         {
             HttpClient httpClient = new HttpClient();
 
-            var urlFile = fileName.Replace(":/", "--");
-            urlFile = urlFile.Replace("/", "-");
+            var urlFile = fileName.Replace(@":\", "~~");
+            urlFile = urlFile.Replace(@"\", "~");
             urlFile = urlFile.Replace(".xlsx", string.Empty);
-            string url = "http://localhost/excel-to-pdf/api/Conversion/Convert/" + fileName;
+            string url = "http://localhost/excel-to-pdf/api/Conversion/Convert/" + urlFile;
 
-            Task.Run(() => httpClient.PostAsync(url, new StringContent(null)).GetAwaiter().GetResult());
+            //Task.Run(() => httpClient.PostAsync(url, new StringContent(null)).GetAwaiter().GetResult());
+            _ = httpClient.PostAsync(url, null).Result;
         }
 
         private static string GetReportFileName(ReportType type, string rootPath, ReportCriteriaView criteria, string charterSchoolName, string schoolDistrictName)
