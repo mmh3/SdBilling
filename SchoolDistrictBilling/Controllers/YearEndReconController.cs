@@ -75,9 +75,9 @@ namespace SchoolDistrictBilling.Controllers
             //return View("Index", new ReportCriteriaView(charterSchools));
 
 
-            //TODO: Is there a better way to do this? Create temp folder if it's not there - don't want error when deploying.
+            //TODO: Is there a better way to do this?
             var archive = _hostEnvironment.WebRootPath + "/archive.zip";
-            var temp = _hostEnvironment.WebRootPath + "/temp";
+            var temp = Directory.CreateDirectory(_hostEnvironment.WebRootPath + "/temp");
 
             // clear any existing archive
             if (System.IO.File.Exists(archive))
@@ -85,13 +85,13 @@ namespace SchoolDistrictBilling.Controllers
                 System.IO.File.Delete(archive);
             }
             // empty the temp folder
-            Directory.EnumerateFiles(temp).ToList().ForEach(f => System.IO.File.Delete(f));
+            Directory.EnumerateFiles(temp.FullName).ToList().ForEach(f => System.IO.File.Delete(f));
 
             // copy the selected files to the temp folder
-            files.ToList().ForEach(f => System.IO.File.Copy(f, Path.Combine(temp, Path.GetFileName(f))));
+            files.ToList().ForEach(f => System.IO.File.Copy(f, Path.Combine(temp.FullName, Path.GetFileName(f))));
 
             // create a new archive
-            ZipFile.CreateFromDirectory(temp, archive);
+            ZipFile.CreateFromDirectory(temp.FullName, archive);
 
             return File("/archive.zip", "application/zip", "reconciliation.zip");
         }
