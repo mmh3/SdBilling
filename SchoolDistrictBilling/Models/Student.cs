@@ -162,6 +162,10 @@ namespace SchoolDistrictBilling.Models
             else
             {
                 var schedule = context.GetCharterSchoolSchedule(CharterSchoolUid, Grade, month, year);
+                if (schedule == null)
+                {
+                    return 0;
+                }
 
                 var daysInMonth = schedule.GetSchoolDays(context, firstDayOfMonth, lastDayOfMonth);
 
@@ -169,12 +173,12 @@ namespace SchoolDistrictBilling.Models
                 // Student started mid-month
                 if (DistrictEntryDate >= firstDayOfMonth)
                 {
-                    return decimal.Round(schedule.GetSchoolDays(context, (DateTime)DistrictEntryDate, lastDayOfMonth) / daysInMonth, 3);
+                    return decimal.Round(schedule.GetSchoolDays(context, (DateTime)DistrictEntryDate, lastDayOfMonth) / (decimal)daysInMonth, 3);
                 }
                 // Student exited mid-month
                 else
                 {
-                    return decimal.Round(schedule.GetSchoolDays(context, firstDayOfMonth, (DateTime)ExitDate) / daysInMonth, 3);
+                    return decimal.Round(schedule.GetSchoolDays(context, firstDayOfMonth, (DateTime)ExitDate) / (decimal)daysInMonth, 3);
                 }
             }
         }
