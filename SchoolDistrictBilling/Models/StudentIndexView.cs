@@ -13,6 +13,8 @@ namespace SchoolDistrictBilling.Models
             List<SchoolDistrict> schoolDistricts = context.SchoolDistricts.ToList();
             ImportCharterSchools = context.CharterSchools.ToList();
 
+            schoolDistricts.Add(new SchoolDistrict() { SchoolDistrictUid = 0, Name = "UNKNOWN", Aun = "0" });
+
             var studentViews = from s in students
                                join sd in schoolDistricts on s.Aun equals sd.Aun
                                join cs in ImportCharterSchools on s.CharterSchoolUid equals cs.CharterSchoolUid

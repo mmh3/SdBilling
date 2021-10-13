@@ -21,124 +21,136 @@ namespace SchoolDistrictBilling.Services
         {
             List<SchoolDistrictRateView> rates = new List<SchoolDistrictRateView>();
 
-            foreach (var fileName in fileNames)
+            for (int pass = 0; pass < 2; pass++)
             {
-                byte[] bin = File.ReadAllBytes(fileName);
-
-                List<string> columns = new List<string>();
-
-                //create a new Excel package in a memorystream
-                using (MemoryStream stream = new MemoryStream(bin))
+                // For performance: To minimize the amount of times we need to update the DB, do 2 passes here. One where we'll build up all of the school
+                // districts and then save that once at the end of the pass and then a second pass to create the SD rates with one save at the end. That way
+                // all of the records for the rates have valid foreign keys to SD records when they're created (and we don't have to save SDs OTF on every iteration.
+                bool createRates = false;
+                if (pass > 0)
                 {
-                    using (ExcelPackage excelPackage = new ExcelPackage(stream))
+                    createRates = true;
+                }
+
+                foreach (var fileName in fileNames)
+                {
+                    byte[] bin = File.ReadAllBytes(fileName);
+
+                    List<string> columns = new List<string>();
+
+                    //create a new Excel package in a memorystream
+                    using (MemoryStream stream = new MemoryStream(bin))
                     {
-                        ExcelWorksheet worksheet = excelPackage.Workbook.Worksheets.First();
-
-                        //loop all rows. Start with the second row
-                        for (int i = worksheet.Dimension.Start.Row; i <= worksheet.Dimension.End.Row; i++)
+                        using (ExcelPackage excelPackage = new ExcelPackage(stream))
                         {
-                            SchoolDistrictRateView rate = new SchoolDistrictRateView();
-                            SchoolDistrict sd = null;
+                            ExcelWorksheet worksheet = excelPackage.Workbook.Worksheets.First();
 
-                            //loop all columns in a row
-                            for (int j = worksheet.Dimension.Start.Column; j <= worksheet.Dimension.End.Column; j++)
+                            //loop all rows. Start with the second row
+                            for (int i = worksheet.Dimension.Start.Row; i <= worksheet.Dimension.End.Row; i++)
                             {
-                                if (worksheet.Cells[i, j].Value != null)
+                                SchoolDistrictRateView rate = new SchoolDistrictRateView();
+                                SchoolDistrict sd = null;
+
+                                //loop all columns in a row
+                                for (int j = worksheet.Dimension.Start.Column; j <= worksheet.Dimension.End.Column; j++)
                                 {
-                                    if (i == 1)
+                                    if (worksheet.Cells[i, j].Value != null)
                                     {
-                                        columns.Add(worksheet.Cells[i, j].Value.ToString());
-                                    }
-                                    else
-                                    {
-                                        // TODO: This feels confusing. Is there a better way to do this with the objects and updating/inserting? What if the columns are in a different order?
-                                        switch (columns[j - 1].ToString())
+                                        if (i == 1)
                                         {
-                                            case "AUN":
-                                                rate.SchoolDistrict.Aun = worksheet.Cells[i, j].Value.ToString();
-                                                sd = context.SchoolDistricts.FirstOrDefault(s => s.Aun == rate.SchoolDistrict.Aun);
+                                            columns.Add(worksheet.Cells[i, j].Value.ToString());
+                                        }
+                                        else
+                                        {
+                                            // TODO: This feels confusing. Is there a better way to do this with the objects and updating/inserting? What if the columns are in a different order?
+                                            switch (columns[j - 1].ToString())
+                                            {
+                                                case "AUN":
+                                                    rate.SchoolDistrict.Aun = worksheet.Cells[i, j].Value.ToString();
+                                                    sd = context.SchoolDistricts.FirstOrDefault(s => s.Aun == rate.SchoolDistrict.Aun);
 
-                                                if (sd == null)
-                                                {
-                                                    sd = new SchoolDistrict
+                                                    if (sd == null)
                                                     {
-                                                        Aun = rate.SchoolDistrict.Aun
-                                                    };
-                                                }
-                                                else
-                                                {
-                                                    rate.SchoolDistrict.SchoolDistrictUid = sd.SchoolDistrictUid;
-                                                }
-                                                break;
+                                                        sd = new SchoolDistrict
+                                                        {
+                                                            Aun = rate.SchoolDistrict.Aun
+                                                        };
+                                                    }
+                                                    else
+                                                    {
+                                                        rate.SchoolDistrict.SchoolDistrictUid = sd.SchoolDistrictUid;
+                                                    }
+                                                    break;
 
-                                            case "School District":
-                                                rate.SchoolDistrict.Name = worksheet.Cells[i, j].Value.ToString();
+                                                case "School District":
+                                                    rate.SchoolDistrict.Name = worksheet.Cells[i, j].Value.ToString();
 
-                                                if (sd != null)
-                                                {
-                                                    sd.Name = rate.SchoolDistrict.Name;
-                                                }
-                                                break;
+                                                    if (sd != null)
+                                                    {
+                                                        sd.Name = rate.SchoolDistrict.Name;
+                                                    }
+                                                    break;
 
-                                            case "County":
-                                                rate.SchoolDistrict.County = worksheet.Cells[i, j].Value.ToString();
+                                                case "County":
+                                                    rate.SchoolDistrict.County = worksheet.Cells[i, j].Value.ToString();
 
-                                                if (sd != null)
-                                                {
-                                                    sd.County = rate.SchoolDistrict.County;
-                                                }
+                                                    if (sd != null)
+                                                    {
+                                                        sd.County = rate.SchoolDistrict.County;
+                                                    }
 
-                                                if (rate.SchoolDistrict.SchoolDistrictUid == 0)
-                                                {
-                                                    context.SchoolDistricts.Add(sd);
-                                                }
-                                                context.SaveChanges();
+                                                    if (rate.SchoolDistrict.SchoolDistrictUid == 0)
+                                                    {
+                                                        context.SchoolDistricts.Add(sd);
+                                                    }
+                                                    //context.SaveChanges();
 
-                                                break;
+                                                    break;
 
-                                            default:
-                                                if (columns[j - 1].ToString().Contains("Nonspecial"))
-                                                {
-                                                    //TODO: Why are all the rates coming through as whole dollar amounts?
-                                                    rate.SchoolDistrictRate.NonSpedRate = Convert.ToDecimal(worksheet.Cells[i, j].Value);
-                                                }
-                                                else if (columns[j - 1].ToString().Contains("Special"))
-                                                {
-                                                    rate.SchoolDistrictRate.SpedRate = Convert.ToDecimal(worksheet.Cells[i, j].Value);
-                                                }
-                                                else if (columns[j - 1].ToString().Contains("Month"))
-                                                {
-                                                    //TODO: Display this without the timestamp
-                                                    rate.SchoolDistrictRate.EffectiveDate = DateTime.Parse(worksheet.Cells[i, j].Value.ToString());
-                                                }
+                                                default:
+                                                    if (columns[j - 1].ToString().Contains("Nonspecial"))
+                                                    {
+                                                        //TODO: Why are all the rates coming through as whole dollar amounts?
+                                                        rate.SchoolDistrictRate.NonSpedRate = Convert.ToDecimal(worksheet.Cells[i, j].Value);
+                                                    }
+                                                    else if (columns[j - 1].ToString().Contains("Special"))
+                                                    {
+                                                        rate.SchoolDistrictRate.SpedRate = Convert.ToDecimal(worksheet.Cells[i, j].Value);
+                                                    }
+                                                    else if (columns[j - 1].ToString().Contains("Month"))
+                                                    {
+                                                        //TODO: Display this without the timestamp
+                                                        rate.SchoolDistrictRate.EffectiveDate = DateTime.Parse(worksheet.Cells[i, j].Value.ToString());
+                                                    }
 
-                                                break;
+                                                    break;
+                                            }
                                         }
                                     }
                                 }
-                            }
 
-                            if (i > 1)
-                            {
-                                SchoolDistrictRate sdr = context.SchoolDistrictRates.FirstOrDefault(r => r.SchoolDistrictUid == sd.SchoolDistrictUid && r.EffectiveDate == rate.SchoolDistrictRate.EffectiveDate);
-                                if (sdr == null)
+                                if (i > 1 && createRates)
                                 {
-                                    sdr = new SchoolDistrictRate(rate);
-                                    sdr.SchoolDistrictUid = sd.SchoolDistrictUid;
-                                    context.SchoolDistrictRates.Add(sdr);
-                                }
-                                else
-                                {
-                                    sdr.NonSpedRate = rate.SchoolDistrictRate.NonSpedRate;
-                                    sdr.SpedRate = rate.SchoolDistrictRate.SpedRate;
+                                    SchoolDistrictRate sdr = context.SchoolDistrictRates.FirstOrDefault(r => r.SchoolDistrictUid == sd.SchoolDistrictUid && r.EffectiveDate == rate.SchoolDistrictRate.EffectiveDate);
+                                    if (sdr == null)
+                                    {
+                                        sdr = new SchoolDistrictRate(rate);
+                                        sdr.SchoolDistrictUid = sd.SchoolDistrictUid;
+                                        context.SchoolDistrictRates.Add(sdr);
+                                    }
+                                    else
+                                    {
+                                        sdr.NonSpedRate = rate.SchoolDistrictRate.NonSpedRate;
+                                        sdr.SpedRate = rate.SchoolDistrictRate.SpedRate;
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            context.SaveChanges();
+                context.SaveChanges();
+            }
 
             return rates;
         }
@@ -181,12 +193,12 @@ namespace SchoolDistrictBilling.Services
                                         // if the columns are in a different order or have slightly different names?
                                         switch (columns[j - 1].ToLower())
                                         {
-                                            case "state student #":
+                                            case "state_studentnumber":
                                                 student.StateStudentNo = worksheet.Cells[i, j].Value.ToString();
                                                 break;
 
-                                            case "aun":
-                                                student.Aun = worksheet.Cells[i, j].Value.ToString();
+                                            case "districtofresidence":
+                                                student.Aun = worksheet.Cells[i, j].Value.ToString(); ;
                                                 break;
 
                                             case "first name":
@@ -195,6 +207,12 @@ namespace SchoolDistrictBilling.Services
 
                                             case "last name":
                                                 student.LastName = worksheet.Cells[i, j].Value.ToString();
+                                                break;
+
+                                            case "lastfirst":
+                                                var fullName = worksheet.Cells[i, j].Value.ToString();
+                                                student.LastName = fullName.Split(",")[0];
+                                                student.FirstName = fullName.Split(",")[1];
                                                 break;
 
                                             case "street":
@@ -217,12 +235,19 @@ namespace SchoolDistrictBilling.Services
                                                 student.Dob = DateTime.Parse(worksheet.Cells[i, j].Value.ToString());
                                                 break;
 
-                                            case "grade":
-                                                student.Grade = worksheet.Cells[i, j].Value.ToString();
+                                            case "grade_level":
+                                                var grade = worksheet.Cells[i, j].Value.ToString();
+                                                if (grade == "0")
+                                                {
+                                                    grade = "K";
+                                                }
+                                                student.Grade = grade;
                                                 break;
 
-                                            case "district entry date":
-                                                student.DistrictEntryDate = DateTime.Parse(worksheet.Cells[i, j].Value.ToString());
+                                            case "districtentrydate":
+                                                var entryDate = worksheet.Cells[i, j].Value.ToString();
+                                                if (entryDate == "0/0/0") entryDate = "01/01/0001";
+                                                student.DistrictEntryDate = DateTime.Parse(entryDate);
                                                 break;
 
                                             case "exit date":
@@ -230,6 +255,7 @@ namespace SchoolDistrictBilling.Services
                                                 break;
 
                                             case "iep":
+                                            case "s_pa_stu_x.special_education_iep_code":
                                                 student.IepFlag = worksheet.Cells[i, j].Value.ToString();
                                                 break;
 
@@ -242,7 +268,6 @@ namespace SchoolDistrictBilling.Services
                                                 break;
 
                                             default:
-
                                                 break;
                                         }
                                     }
@@ -254,6 +279,7 @@ namespace SchoolDistrictBilling.Services
                                 Student existingStudent = context.Students.FirstOrDefault(s => s.StateStudentNo == student.StateStudentNo && s.CharterSchoolUid == student.CharterSchoolUid);
                                 if (existingStudent == null)
                                 {
+                                    if (string.IsNullOrEmpty(student.Aun)) student.Aun = "0";
                                     context.Students.Add(student);
                                 }
                                 else
