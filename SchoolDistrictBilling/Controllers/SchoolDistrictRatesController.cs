@@ -27,7 +27,7 @@ namespace SchoolDistrictBilling.Controllers
             List<SchoolDistrict> schoolDistricts = await _context.SchoolDistricts.ToListAsync();
             List<SchoolDistrictRate> schoolDistrictRates = await _context.SchoolDistrictRates.ToListAsync();
 
-            //TODO: Only select the latest rate for each school district.
+            //TODO: How to get the latest rate for each school using linq to be more efficient?
             //var viewModel = from d in schoolDistricts
             //                join r in schoolDistrictRates on d.SchoolDistrictUid equals r.SchoolDistrictUid into table1
             //                from r in table1.ToList()
@@ -37,7 +37,7 @@ namespace SchoolDistrictBilling.Controllers
             //                    SchoolDistrictRate = r
             //                };
 
-            //TODO: How to get this using linq to be more efficient?
+            //TODO: How to get the latest rate for each school using linq to be more efficient?
             //var viewModel = from r in schoolDistrictRates
             //                join d in schoolDistricts on r.SchoolDistrictUid equals d.SchoolDistrictUid into table1
             //                //from x in table1.ToList()

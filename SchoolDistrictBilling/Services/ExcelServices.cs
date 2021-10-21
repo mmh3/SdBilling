@@ -110,7 +110,6 @@ namespace SchoolDistrictBilling.Services
                                                 default:
                                                     if (columns[j - 1].ToString().Contains("Nonspecial"))
                                                     {
-                                                        //TODO: Why are all the rates coming through as whole dollar amounts?
                                                         rate.SchoolDistrictRate.NonSpedRate = Convert.ToDecimal(worksheet.Cells[i, j].Value);
                                                     }
                                                     else if (columns[j - 1].ToString().Contains("Special"))
@@ -119,7 +118,6 @@ namespace SchoolDistrictBilling.Services
                                                     }
                                                     else if (columns[j - 1].ToString().Contains("Month"))
                                                     {
-                                                        //TODO: Display this without the timestamp
                                                         rate.SchoolDistrictRate.EffectiveDate = DateTime.Parse(worksheet.Cells[i, j].Value.ToString());
                                                     }
 
