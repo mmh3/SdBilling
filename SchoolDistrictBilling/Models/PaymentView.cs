@@ -63,6 +63,7 @@ namespace SchoolDistrictBilling.Models
         public DateTime Date { get; set; } = DateTime.Today;
         [Display(Name = "Check #")]
         public int CheckNo { get; set; }
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal Amount { get; set; }
         [Display(Name = "Paid By")]
         public string PaidBy { get; set; }

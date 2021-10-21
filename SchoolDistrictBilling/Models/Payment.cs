@@ -46,6 +46,7 @@ namespace SchoolDistrictBilling.Models
         public int CheckNo { get; set; }
 
         [Column("amount")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal Amount { get; set; }
 
         [Column("paid_by")]

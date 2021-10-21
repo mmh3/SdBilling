@@ -32,10 +32,12 @@ namespace SchoolDistrictBilling.Models
 
         [Column("non_sped_rate")]
         [DisplayName("Non-sped Rate")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal NonSpedRate { get; set; }
 
         [Column("sped_rate")]
         [DisplayName("Sped Rate")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal SpedRate { get; set; }
 
         [Column("effective_date")]
