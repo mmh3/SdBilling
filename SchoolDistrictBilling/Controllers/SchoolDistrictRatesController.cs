@@ -48,7 +48,7 @@ namespace SchoolDistrictBilling.Controllers
             //                };
 
             var viewModel = new List<SchoolDistrictRateView>();
-            foreach(var school in schoolDistricts)
+            foreach (var school in schoolDistricts)
             {
                 var rates = schoolDistrictRates.Where(r => r.SchoolDistrictUid == school.SchoolDistrictUid);
                 if (rates.Count() == 0)
@@ -97,20 +97,7 @@ namespace SchoolDistrictBilling.Controllers
 
             List<SchoolDistrictRateView> rates = ExcelServices.ImportSchoolDistrictRates(_context, fileNames);
 
-            //TODO: Can we just redirect to Index action here???
-            List<SchoolDistrict> schoolDistricts = await _context.SchoolDistricts.ToListAsync();
-            List<SchoolDistrictRate> schoolDistrictRates = await _context.SchoolDistrictRates.ToListAsync();
-
-            var viewModel = from d in schoolDistricts
-                            join r in schoolDistrictRates on d.SchoolDistrictUid equals r.SchoolDistrictUid into table1
-                            from r in table1.ToList()
-                            select new SchoolDistrictRateView
-                            {
-                                SchoolDistrict = d,
-                                SchoolDistrictRate = r
-                            };
-
-            return View("Index", viewModel);
+            return RedirectToAction("Index");
         }
 
         // GET: SchoolDistrictRates/Delete/5
