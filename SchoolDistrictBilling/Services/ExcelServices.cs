@@ -426,6 +426,12 @@ namespace SchoolDistrictBilling.Services
 
         public static IEnumerable<string> GenerateMonthlyInvoice(AppDbContext context, string rootPath, ReportCriteriaView criteria)
         {
+            //using (StreamWriter w = File.AppendText(@"C:\temp\TestingInvoices.txt"))
+            //{
+            //    w.WriteLine("{0}", DateTime.Now);
+            //    w.WriteLine("{0}", "GenerateMonthlyInvoice");
+            //}
+
             var charterSchoolName = context.CharterSchools.Find(criteria.CharterSchoolUid).Name;
             var headerDateRange = "For the Months of July " + GetStartYear(criteria.Month, criteria.Year) + " to " + criteria.Month + " " + criteria.Year;
 
@@ -443,34 +449,45 @@ namespace SchoolDistrictBilling.Services
 
             using (ExcelPackage invoice = new ExcelPackage(invoiceTemplate))
             {
-                using (ExcelPackage student = new ExcelPackage(studentTemplate))
+                ExcelWorksheet invoiceSheet = invoice.Workbook.Worksheets.FirstOrDefault();
+                FileInfo unipayFile = null;
+
+                // Replace header information
+                invoiceSheet.Cells["H1"].Value = charterSchoolName;
+                invoiceSheet.Cells["H4"].Value = headerDateRange;
+                PopulatePrepDates(invoiceSheet, criteria.SendTo, "N6");
+
+                if (criteria.SendTo == SubmitTo.PDE.ToString())
                 {
-                    ExcelWorksheet invoiceSheet = invoice.Workbook.Worksheets.FirstOrDefault();
-                    ExcelWorksheet studentSheet = student.Workbook.Worksheets.FirstOrDefault();
-                    FileInfo unipayFile = null;
+                    unipayFile = GenerateUnipayRequest(criteria, rootPath, charterSchoolName);
+                }
+                invoiceSheet.Cells["N8"].Value = string.Empty;
 
-                    // Replace header information
-                    invoiceSheet.Cells["H1"].Value = charterSchoolName;
-                    studentSheet.Cells["F1"].Value = charterSchoolName;
-                    invoiceSheet.Cells["H4"].Value = headerDateRange;
-                    studentSheet.Cells["F4"].Value = headerDateRange;
-                    PopulatePrepDates(invoiceSheet, criteria.SendTo, "N6");
+                // Get the list of school district AUNs we'll be billing - this will dictate the number of reports we're creating
+                var sdAuns = context.GetAunsForCharterSchool(criteria.CharterSchoolUid);
 
-                    if (criteria.SendTo == SubmitTo.PDE.ToString())
+                int unipayRow = 10;
+                foreach (var aun in sdAuns)
+                {
+                    // if aun is 0 it means the student(s) didn't have a home school district in the data. Skip these students for the reports.
+                    if (aun == "0") continue;
+
+                    // Each iteration, start with the empty student template so we don't have extra pages in here from the previous district.
+                    using (ExcelPackage student = new ExcelPackage(studentTemplate))
                     {
-                        unipayFile = GenerateUnipayRequest(criteria, rootPath, charterSchoolName);
-                    }
-                    invoiceSheet.Cells["N8"].Value = string.Empty;
-                    studentSheet.Cells["K6"].Value = DateTime.Now.Date.ToString("MM/dd/yyyy");
+                        ExcelWorksheet studentSheet = student.Workbook.Worksheets.FirstOrDefault();
+                        studentSheet.Cells["F1"].Value = charterSchoolName;
+                        studentSheet.Cells["F4"].Value = headerDateRange;
+                        studentSheet.Cells["K6"].Value = DateTime.Now.Date.ToString("MM/dd/yyyy");
 
-                    // Get the list of school district AUNs we'll be billing - this will dictate the number of reports we're creating
-                    var sdAuns = context.GetAunsForCharterSchool(criteria.CharterSchoolUid);
-
-                    int unipayRow = 10;
-                    foreach (var aun in sdAuns)
-                    {
                         var schoolDistrict = context.SchoolDistricts.Where(sd => sd.Aun == aun).FirstOrDefault();
                         var schoolDistrictName = schoolDistrict.Name;
+
+                        //using (StreamWriter w = File.AppendText(@"C:\temp\TestingInvoices.txt"))
+                        //{
+                        //    w.WriteLine("{0}", DateTime.Now);
+                        //    w.WriteLine("{0}", schoolDistrictName);
+                        //}
 
                         // If we're sending to PDE and we're here, only generate invoices for the selected SDs.
                         if (criteria.SendTo == "PDE" && !criteria.SelectedSchoolDistricts.Contains(schoolDistrictName))
@@ -512,7 +529,7 @@ namespace SchoolDistrictBilling.Services
                     }
                 }
 
-                return Directory.EnumerateFiles(GetReportPath(ReportType.Invoice, rootPath, criteria, charterSchoolName), "*.pdf");
+                return Directory.EnumerateFiles(GetReportPath(ReportType.Invoice, rootPath, criteria, charterSchoolName)/*, "*.pdf"*/);
             }
         }
 
@@ -806,6 +823,7 @@ namespace SchoolDistrictBilling.Services
                 sheet.Row(int.Parse(thirdRow)).Height = 13;
                 sheet.Row(int.Parse(fourthRow)).Height = 13;
 
+                sheet.Cells["B" + secondRow].Value = (sheetNum * 8) + (i + 1);
                 sheet.Cells["C" + secondRow].Value = string.Empty;
                 sheet.Cells["D" + firstRow].Value = string.Empty;
                 sheet.Cells["D" + secondRow].Value = string.Empty;
@@ -990,7 +1008,7 @@ namespace SchoolDistrictBilling.Services
             FileInfo outputFile = new FileInfo(fileName);
             excel.SaveAs(outputFile);
 
-            ConvertFileToPdf(fileName);
+            //ConvertFileToPdf(fileName);
 
             return outputFile;
         }
