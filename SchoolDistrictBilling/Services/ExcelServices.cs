@@ -245,24 +245,48 @@ namespace SchoolDistrictBilling.Services
                                             case "districtentrydate":
                                                 var entryDate = worksheet.Cells[i, j].Value.ToString();
                                                 if (entryDate == "0/0/0") entryDate = "01/01/0001";
-                                                student.DistrictEntryDate = DateTime.Parse(entryDate);
+
+                                                DateTime entryDateTime;
+                                                if (DateTime.TryParse(entryDate, out entryDateTime))
+                                                {
+                                                    student.DistrictEntryDate = entryDateTime;
+                                                }
+                                                else
+                                                {
+                                                    student.DistrictEntryDate = DateTime.Parse("01/01/0001");
+                                                }
                                                 break;
 
                                             case "exit date":
-                                                student.ExitDate = DateTime.Parse(worksheet.Cells[i, j].Value.ToString());
+                                                DateTime exitDate;
+                                                if (DateTime.TryParse(worksheet.Cells[i, j].Value.ToString(), out exitDate))
+                                                {
+                                                    student.ExitDate = exitDate;
+                                                }
                                                 break;
 
                                             case "iep":
+                                            case "iep (y/n)":
                                             case "s_pa_stu_x.special_education_iep_code":
                                                 student.IepFlag = worksheet.Cells[i, j].Value.ToString();
                                                 break;
 
                                             case "current iep date":
-                                                student.CurrentIepDate = DateTime.Parse(worksheet.Cells[i, j].Value.ToString());
+                                            case "current iep":
+                                                DateTime currentIep;
+                                                if (DateTime.TryParse(worksheet.Cells[i, j].Value.ToString(), out currentIep))
+                                                {
+                                                    student.CurrentIepDate = currentIep;
+                                                }
                                                 break;
 
                                             case "prior iep date":
-                                                student.PriorIepDate = DateTime.Parse(worksheet.Cells[i, j].Value.ToString());
+                                            case "previous iep":
+                                                DateTime priorIep;
+                                                if (DateTime.TryParse(worksheet.Cells[i, j].Value.ToString(), out priorIep))
+                                                {
+                                                    student.PriorIepDate = priorIep;
+                                                }
                                                 break;
 
                                             default:
@@ -784,15 +808,15 @@ namespace SchoolDistrictBilling.Services
             sheet.Cells["D" + secondRow].Value = student.AddressStreet;
             sheet.Cells["D" + fourthRow].Value = student.AddressCity + ", " + student.AddressState;
             sheet.Cells["E" + fourthRow].Value = student.AddressZip;
-            sheet.Cells["F" + firstRow].Value = student.Dob;
+            sheet.Cells["F" + firstRow].Value = student.Dob.HasValue ? student.Dob.Value.ToString("MM/dd/yyyy") : "";
             sheet.Cells["F" + thirdRow].Value = student.Grade;
 
             sheet.Cells["G" + secondRow].Value = ""; //Submitted date
-            sheet.Cells["H" + secondRow].Value = student.DistrictEntryDate;
-            sheet.Cells["I" + secondRow].Value = student.ExitDate;
+            sheet.Cells["H" + secondRow].Value = student.DistrictEntryDate.HasValue ? student.DistrictEntryDate.Value.ToString("MM/dd/yyyy") : "";
+            sheet.Cells["I" + secondRow].Value = student.ExitDate.HasValue ? student.ExitDate.Value.ToString("MM/dd/yyyy") : "";
             sheet.Cells["J" + secondRow].Value = student.IepFlag == "Y" ? "Yes" : "No";
-            sheet.Cells["K" + secondRow].Value = student.CurrentIepDate;
-            sheet.Cells["K" + fourthRow].Value = student.PriorIepDate;
+            sheet.Cells["K" + secondRow].Value = student.CurrentIepDate.HasValue ? student.CurrentIepDate.Value.ToString("MM/dd/yyyy") : "";
+            sheet.Cells["K" + fourthRow].Value = student.PriorIepDate.HasValue ? student.PriorIepDate.Value.ToString("MM/dd/yyyy") : "";
         }
 
         private static void ClearAndFormatCopiedSheet(ExcelWorksheet sheet, decimal sheetNum)
@@ -873,7 +897,6 @@ namespace SchoolDistrictBilling.Services
 
             foreach (var student in students)
             {
-                // TODO: Is sped flag the same as IEP flag or they're different?
                 if (student.IepFlag == "Y")
                 {
                     spedStudents += student.GetMonthlyAttendanceValue(context, month, year);
