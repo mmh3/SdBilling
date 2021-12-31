@@ -43,7 +43,8 @@ namespace SchoolDistrictBilling.Models
         public DateTime Date { get; set; } = DateTime.Today;
 
         [Column("check_no")]
-        public int CheckNo { get; set; }
+        [StringLength(255)]
+        public string CheckNo { get; set; }
 
         [Column("amount")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]

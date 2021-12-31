@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
@@ -596,7 +597,7 @@ namespace SchoolDistrictBilling.Services
                     row = row + rowIncrement;
                 }
 
-                if (!string.IsNullOrEmpty(payment.CheckNo.ToString())) sheet.Cells["D" + row.ToString()].Value = payment.CheckNo;
+                if (!string.IsNullOrEmpty(payment.CheckNo)) sheet.Cells["D" + row.ToString()].Value = payment.CheckNo;
 
                 if (payment.Amount < 0)
                 {
@@ -661,7 +662,7 @@ namespace SchoolDistrictBilling.Services
                     row = row + rowIncrement;
                 }
 
-                if (!string.IsNullOrEmpty(payment.CheckNo.ToString())) invoiceSheet.Cells["E" + row.ToString()].Value = payment.CheckNo;
+                if (!string.IsNullOrEmpty(payment.CheckNo)) invoiceSheet.Cells["E" + row.ToString()].Value = payment.CheckNo;
                 invoiceSheet.Cells["F" + row.ToString()].Value = payment.Date.Date;
 
                 if (payment.Amount < 0)
@@ -1044,6 +1045,8 @@ namespace SchoolDistrictBilling.Services
             urlFile = urlFile.Replace(@"\", "~");
             urlFile = urlFile.Replace(".xlsx", string.Empty);
             string url = "http://localhost/excel-to-pdf/api/Conversion/Convert/" + urlFile;
+
+            Thread.Sleep(5000);
 
             //Task.Run(() => httpClient.PostAsync(url, new StringContent(null)).GetAwaiter().GetResult());
             _ = httpClient.PostAsync(url, null).Result;

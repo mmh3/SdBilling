@@ -61,8 +61,8 @@ namespace SchoolDistrictBilling.Models
         public int SchoolDistrictUid { get; set; }
         [DataType(DataType.Date)]
         public DateTime Date { get; set; } = DateTime.Today;
-        [Display(Name = "Check #")]
-        public int CheckNo { get; set; }
+        [Display(Name = "Check # / ACH")]
+        public string CheckNo { get; set; }
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal Amount { get; set; }
         [Display(Name = "Paid By")]
