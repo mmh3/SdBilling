@@ -185,16 +185,16 @@ namespace SchoolDistrictBilling.Models
 
         public void CopyPropertiesFrom(Student student)
         {
-            Aun = student.Aun;
-            FirstName = student.FirstName;
-            LastName = student.LastName;
+            if (!string.IsNullOrEmpty(student.Aun)) Aun = student.Aun;
+            if (!string.IsNullOrEmpty(student.FirstName)) FirstName = student.FirstName;
+            if (!string.IsNullOrEmpty(student.LastName)) LastName = student.LastName;
             AddressStreet = student.AddressStreet;
             AddressCity = student.AddressCity;
             AddressState = student.AddressState;
             AddressZip = student.AddressZip;
-            Dob = student.Dob;
+            if (student.Dob != null && student.Dob != DateTime.Parse("01/01/0001")) Dob = student.Dob;
             Grade = student.Grade;
-            DistrictEntryDate = student.DistrictEntryDate;
+            if (student.DistrictEntryDate != null && student.DistrictEntryDate != DateTime.Parse("01/01/0001")) DistrictEntryDate = student.DistrictEntryDate;
             ExitDate = student.ExitDate;
             IepFlag = student.IepFlag;
             CurrentIepDate = student.CurrentIepDate;
