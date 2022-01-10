@@ -163,6 +163,8 @@ namespace SchoolDistrictBilling.Services
                 byte[] bin = File.ReadAllBytes(fileName);
 
                 List<string> columns = new List<string>();
+                bool checkForColumnHeaders = false;
+                bool isHeadersRow = false;
 
                 //create a new Excel package in a memorystream
                 using (MemoryStream stream = new MemoryStream(bin))
@@ -176,128 +178,166 @@ namespace SchoolDistrictBilling.Services
                         {
                             Student student = new Student();
                             student.CharterSchoolUid = charterSchoolUid;
+                            checkForColumnHeaders = (columns.Count() == 0);
+                            // reset this value if the last row was the headers row
+                            if (isHeadersRow) isHeadersRow = false;
 
                             //loop all columns in a row
                             for (int j = worksheet.Dimension.Start.Column; j <= worksheet.Dimension.End.Column; j++)
                             {
                                 if (worksheet.Cells[i, j].Value != null)
                                 {
-                                    if (i == 1)
+                                    if (checkForColumnHeaders)
                                     {
-                                        columns.Add(worksheet.Cells[i, j].Value.ToString());
+                                        string cellValue = worksheet.Cells[i, j].Value.ToString();
+                                        List<string> columnHeaders = new List<string> { "state_studentnumber", "lastfirst", "street", "city", "state", "zip", "districtofresidence", "district", "dob", "grade_level", "districtentrydate", "vsims start date/date new district", "exit date", "iep (y/n)", "previous iep", "current iep" };
+
+                                        // If we haven't already confirmed that this is the headers row, check to see if the current cell value is one of the headers.
+                                        // If it is one of the column headers, set the bool that tells us it is. If it's not, break the current loop and check the next row.
+                                        if (!isHeadersRow)
+                                        {
+                                            if (columnHeaders.Contains(cellValue.ToLower()))
+                                            {
+                                                isHeadersRow = true;
+                                            }
+                                            else
+                                            {
+                                                break;
+                                            }
+                                        }
+
+                                        columns.Add(cellValue);
                                     }
                                     else
                                     {
-                                        // TODO: This feels confusing. Is there a better way to do this with the objects and updating/inserting? What
-                                        // if the columns are in a different order or have slightly different names?
-                                        switch (columns[j - 1].ToLower())
+                                        try
                                         {
-                                            case "state_studentnumber":
-                                                student.StateStudentNo = worksheet.Cells[i, j].Value.ToString();
-                                                break;
+                                            // TODO: This feels confusing. Is there a better way to do this with the objects and updating/inserting? What
+                                            // if the columns are in a different order or have slightly different names?
+                                            switch (columns[j - 1].ToLower())
+                                            {
+                                                case "state_studentnumber":
+                                                    student.StateStudentNo = worksheet.Cells[i, j].Value.ToString();
+                                                    break;
 
-                                            case "districtofresidence":
-                                                student.Aun = worksheet.Cells[i, j].Value.ToString(); ;
-                                                break;
+                                                case "districtofresidence":
+                                                    student.Aun = worksheet.Cells[i, j].Value.ToString(); ;
+                                                    break;
 
-                                            case "first name":
-                                                student.FirstName = worksheet.Cells[i, j].Value.ToString();
-                                                break;
+                                                case "first name":
+                                                    student.FirstName = worksheet.Cells[i, j].Value.ToString();
+                                                    break;
 
-                                            case "last name":
-                                                student.LastName = worksheet.Cells[i, j].Value.ToString();
-                                                break;
+                                                case "last name":
+                                                    student.LastName = worksheet.Cells[i, j].Value.ToString();
+                                                    break;
 
-                                            case "lastfirst":
-                                                var fullName = worksheet.Cells[i, j].Value.ToString();
-                                                student.LastName = fullName.Split(",")[0];
-                                                student.FirstName = fullName.Split(",")[1];
-                                                break;
+                                                case "lastfirst":
+                                                    var fullName = worksheet.Cells[i, j].Value.ToString();
+                                                    student.LastName = fullName.Split(",")[0];
+                                                    student.FirstName = fullName.Split(",")[1];
+                                                    break;
 
-                                            case "street":
-                                                student.AddressStreet = worksheet.Cells[i, j].Value.ToString();
-                                                break;
+                                                case "street":
+                                                    student.AddressStreet = worksheet.Cells[i, j].Value.ToString();
+                                                    break;
 
-                                            case "city":
-                                                student.AddressCity = worksheet.Cells[i, j].Value.ToString();
-                                                break;
+                                                case "city":
+                                                    student.AddressCity = worksheet.Cells[i, j].Value.ToString();
+                                                    break;
 
-                                            case "state":
-                                                student.AddressState = worksheet.Cells[i, j].Value.ToString();
-                                                break;
+                                                case "state":
+                                                    student.AddressState = worksheet.Cells[i, j].Value.ToString();
+                                                    break;
 
-                                            case "zip":
-                                                student.AddressZip = worksheet.Cells[i, j].Value.ToString();
-                                                break;
+                                                case "zip":
+                                                    student.AddressZip = worksheet.Cells[i, j].Value.ToString();
+                                                    break;
 
-                                            case "dob":
-                                                student.Dob = DateTime.Parse(worksheet.Cells[i, j].Value.ToString());
-                                                break;
+                                                case "dob":
+                                                    //student.Dob = DateTime.Parse(worksheet.Cells[i, j].Value.ToString());
+                                                    var dob = worksheet.Cells[i, j].Value.ToString();
+                                                    DateTime dobDateTime;
+                                                    if (DateTime.TryParse(dob, out dobDateTime))
+                                                    {
+                                                        student.Dob = dobDateTime;
+                                                    }
+                                                    else
+                                                    {
+                                                        student.Dob = DateTime.Parse("01/01/0001");
+                                                    }
+                                                    break;
 
-                                            case "grade_level":
-                                                var grade = worksheet.Cells[i, j].Value.ToString();
-                                                if (grade == "0")
-                                                {
-                                                    grade = "K";
-                                                }
-                                                student.Grade = grade;
-                                                break;
+                                                case "grade_level":
+                                                    var grade = worksheet.Cells[i, j].Value.ToString();
+                                                    if (grade == "0")
+                                                    {
+                                                        grade = "K";
+                                                    }
+                                                    student.Grade = grade;
+                                                    break;
 
-                                            case "districtentrydate":
-                                                var entryDate = worksheet.Cells[i, j].Value.ToString();
-                                                if (entryDate == "0/0/0") entryDate = "01/01/0001";
+                                                case "districtentrydate":
+                                                case "vsims start date/date new district":
+                                                    var entryDate = worksheet.Cells[i, j].Value.ToString();
+                                                    if (entryDate == "0/0/0") entryDate = "01/01/0001";
 
-                                                DateTime entryDateTime;
-                                                if (DateTime.TryParse(entryDate, out entryDateTime))
-                                                {
-                                                    student.DistrictEntryDate = entryDateTime;
-                                                }
-                                                else
-                                                {
-                                                    student.DistrictEntryDate = DateTime.Parse("01/01/0001");
-                                                }
-                                                break;
+                                                    DateTime entryDateTime;
+                                                    if (DateTime.TryParse(entryDate, out entryDateTime))
+                                                    {
+                                                        student.DistrictEntryDate = entryDateTime;
+                                                    }
+                                                    else
+                                                    {
+                                                        student.DistrictEntryDate = DateTime.Parse("01/01/0001");
+                                                    }
+                                                    break;
 
-                                            case "exit date":
-                                                DateTime exitDate;
-                                                if (DateTime.TryParse(worksheet.Cells[i, j].Value.ToString(), out exitDate))
-                                                {
-                                                    student.ExitDate = exitDate;
-                                                }
-                                                break;
+                                                case "exit date":
+                                                    DateTime exitDate;
+                                                    if (DateTime.TryParse(worksheet.Cells[i, j].Value.ToString(), out exitDate))
+                                                    {
+                                                        student.ExitDate = exitDate;
+                                                    }
+                                                    break;
 
-                                            case "iep":
-                                            case "iep (y/n)":
-                                            case "s_pa_stu_x.special_education_iep_code":
-                                                student.IepFlag = worksheet.Cells[i, j].Value.ToString();
-                                                break;
+                                                case "iep":
+                                                case "iep (y/n)":
+                                                case "s_pa_stu_x.special_education_iep_code":
+                                                    student.IepFlag = worksheet.Cells[i, j].Value.ToString();
+                                                    break;
 
-                                            case "current iep date":
-                                            case "current iep":
-                                                DateTime currentIep;
-                                                if (DateTime.TryParse(worksheet.Cells[i, j].Value.ToString(), out currentIep))
-                                                {
-                                                    student.CurrentIepDate = currentIep;
-                                                }
-                                                break;
+                                                case "current iep date":
+                                                case "current iep":
+                                                    DateTime currentIep;
+                                                    if (DateTime.TryParse(worksheet.Cells[i, j].Value.ToString(), out currentIep))
+                                                    {
+                                                        student.CurrentIepDate = currentIep;
+                                                    }
+                                                    break;
 
-                                            case "prior iep date":
-                                            case "previous iep":
-                                                DateTime priorIep;
-                                                if (DateTime.TryParse(worksheet.Cells[i, j].Value.ToString(), out priorIep))
-                                                {
-                                                    student.PriorIepDate = priorIep;
-                                                }
-                                                break;
+                                                case "prior iep date":
+                                                case "previous iep":
+                                                    DateTime priorIep;
+                                                    if (DateTime.TryParse(worksheet.Cells[i, j].Value.ToString(), out priorIep))
+                                                    {
+                                                        student.PriorIepDate = priorIep;
+                                                    }
+                                                    break;
 
-                                            default:
-                                                break;
+                                                default:
+                                                    break;
+                                            }
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            throw new Exception($"Error processing row {i.ToString()}, column {columns[j - 1]}. {e.Message}");
                                         }
                                     }
                                 }
                             }
 
-                            if (i > 1)
+                            if (columns.Count() > 0 && !isHeadersRow)
                             {
                                 Student existingStudent = context.Students.FirstOrDefault(s => s.StateStudentNo == student.StateStudentNo && s.CharterSchoolUid == student.CharterSchoolUid);
                                 if (existingStudent == null)
