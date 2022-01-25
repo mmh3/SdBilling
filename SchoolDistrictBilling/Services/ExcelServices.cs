@@ -339,7 +339,9 @@ namespace SchoolDistrictBilling.Services
 
                             if (columns.Count() > 0 && !isHeadersRow)
                             {
-                                Student existingStudent = context.Students.FirstOrDefault(s => s.StateStudentNo == student.StateStudentNo && s.CharterSchoolUid == student.CharterSchoolUid);
+                                Student existingStudent = context.Students.FirstOrDefault(s => s.StateStudentNo == student.StateStudentNo
+                                                                                                && s.CharterSchoolUid == student.CharterSchoolUid
+                                                                                                && s.Aun == student.Aun);
                                 if (existingStudent == null)
                                 {
                                     if (string.IsNullOrEmpty(student.Aun)) student.Aun = "0";
@@ -926,7 +928,13 @@ namespace SchoolDistrictBilling.Services
             int monthIndex = invoiceMonths.IndexOf(invoiceMonth);
             for (int i = 0; i <= monthIndex; i++)
             {
-                PopulateInvoiceMonthlyStudents(context, sheet, students, invoiceMonths[i], Int32.Parse(criteria.Year));
+                int year = int.Parse(criteria.Year);
+                // If we're generating invoicing for January through June, need to decrement the year when calculating students for July through Dec.
+                if (invoiceMonth < 7 && i <= 5)
+                {
+                    year = year - 1;
+                }
+                PopulateInvoiceMonthlyStudents(context, sheet, students, invoiceMonths[i], year);
             }
         }
 
