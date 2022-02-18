@@ -946,14 +946,10 @@ namespace SchoolDistrictBilling.Services
 
             foreach (var student in students)
             {
-                if (student.IepFlag == "Y")
-                {
-                    spedStudents += student.GetMonthlyAttendanceValue(context, month, year);
-                }
-                else
-                {
-                    nonSpedStudents += student.GetMonthlyAttendanceValue(context, month, year);
-                }
+                student.GetMonthlyAttendanceValue(context, month, year, out decimal spedAttendance, out decimal nonSpedAttendance);
+
+                spedStudents += spedAttendance;
+                nonSpedStudents += nonSpedAttendance;
             }
 
             sheet.Cells[GetInvoiceMonthCell(month, false)].Value = nonSpedStudents;
