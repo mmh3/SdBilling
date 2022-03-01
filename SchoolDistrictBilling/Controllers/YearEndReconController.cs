@@ -48,7 +48,7 @@ namespace SchoolDistrictBilling.Controllers
         // POST: YearEndRecon
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public FileResult Generate(ReportCriteriaView criteria)
+        public async Task<FileResult> Generate(ReportCriteriaView criteria)
         {
             if (!ModelState.IsValid)
             {
@@ -61,6 +61,7 @@ namespace SchoolDistrictBilling.Controllers
 
             //open the template
             var files = ExcelServices.GenerateYearEndRecon(_context, _hostEnvironment.WebRootPath, criteria);
+            await _context.SaveChangesAsync();
 
             //alter data
 

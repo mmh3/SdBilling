@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using SchoolDistrictBilling.Models;
+using SchoolDistrictBilling.Reports;
 
 namespace SchoolDistrictBilling.Data
 {
@@ -19,6 +20,7 @@ namespace SchoolDistrictBilling.Data
         public DbSet<Payment> Payments { get; set; }
         public DbSet<CharterSchoolContact> CharterSchoolContacts { get; set; }
         public DbSet<SchoolDistrictContact> SchoolDistrictContacts { get; set; }
+        public DbSet<ReportHistory> ReportHistoryRecords { get; set; }
 
 
         // Get the list of school district AUNs for a given charter school.
@@ -85,6 +87,40 @@ namespace SchoolDistrictBilling.Data
                                                   .ToList();
 
             return schedules.Where(s => s.AppliesToGrade(grade)).FirstOrDefault();
+        }
+
+        // Get all charter school schedules for the given month.
+        public List<CharterSchoolSchedule> GetCharterSchoolSchedules(int charterSchoolUid, int month, int year)
+        {
+            DateTime firstDayOfMonth = new DateTime(year, month, 1);
+            DateTime lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1).Date.AddHours(23).AddMinutes(59).AddSeconds(59);
+
+            return CharterSchoolSchedules.Where(s => s.CharterSchoolUid == charterSchoolUid &&
+                                                     s.FirstDay.Date <= lastDayOfMonth &&
+                                                     s.LastDay.Date >= firstDayOfMonth)
+                                         .ToList();
+        }
+
+        // Get the date of the most recent report for the given report type / charter school / school district combination where it was sent to the SD.
+        public DateTime? GetMostRecentSDReportDate(ReportType type, int charterSchoolUid, int schoolDistrictUid, string month, int year)
+        {
+            var report = ReportHistoryRecords.Where(r => r.CharterSchoolUid == charterSchoolUid &&
+                                                         r.SchoolDistrictUid == schoolDistrictUid &&
+                                                         r.ReportType == type.Value &&
+                                                         r.ReportMonth == month &&
+                                                         r.ReportYear == year &&
+                                                         r.SendTo == "School")
+                                             .OrderByDescending(d => d.RunDate)
+                                             .FirstOrDefault();
+
+            if (report == null)
+            {
+                return null;
+            }
+            else
+            {
+                return report.RunDate;
+            }
         }
     }
 }
