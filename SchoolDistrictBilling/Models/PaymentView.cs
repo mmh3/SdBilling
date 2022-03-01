@@ -27,6 +27,8 @@ namespace SchoolDistrictBilling.Models
             CheckNo = payment.CheckNo;
             Amount = payment.Amount;
             PaidBy = payment.PaidBy;
+            EnrollmentMonth = payment.EnrollmentMonth;
+            Comments = payment.Comments;
         }
         public PaymentView(List<CharterSchool> charterSchools, List<SchoolDistrict> schoolDistricts, Payment payment)
         {
@@ -42,11 +44,14 @@ namespace SchoolDistrictBilling.Models
             CheckNo = payment.CheckNo;
             Amount = payment.Amount;
             PaidBy = payment.PaidBy;
+            EnrollmentMonth = payment.EnrollmentMonth;
+            Comments = payment.Comments;
         }
 
         public List<string> CharterSchools { get; set; }
         public List<string> SchoolDistricts { get; set; }
         public List<string> PaidByList { get; set; } = new List<string> { "School", "PDE" };
+        public List<string> Months { get; set; } = new List<string> { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
 
         public CharterSchool CharterSchool { get; set; }
         public SchoolDistrict SchoolDistrict { get; set; }
@@ -60,6 +65,7 @@ namespace SchoolDistrictBilling.Models
         public int CharterSchoolUid { get; set; }
         public int SchoolDistrictUid { get; set; }
         [DataType(DataType.Date)]
+        [Display(Name = "Payment Date")]
         public DateTime Date { get; set; } = DateTime.Today;
         [Display(Name = "Check # / ACH")]
         public string CheckNo { get; set; }
@@ -67,5 +73,10 @@ namespace SchoolDistrictBilling.Models
         public decimal Amount { get; set; }
         [Display(Name = "Paid By")]
         public string PaidBy { get; set; }
+
+        [Display(Name = "Enrollment Month")]
+        public string EnrollmentMonth { get; set; }
+        [Display(Name = "Comments")]
+        public string Comments { get; set; }
     }
 }

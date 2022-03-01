@@ -50,6 +50,16 @@
             <span asp-validation-for="Date" class="text-danger"></span>
         </div>
 
+        <label asp-for="EnrollmentMonth" class="col-md-2 col-form-label"></label>
+        <div class="col-md-4">
+            <select id="drpEnrollmentMonth" class="form-control" asp-for="EnrollmentMonth" asp-items="@(new SelectList(Model.Months, "Name"))">
+                <option value="">--Select--</option>
+            </select>
+            <input type="hidden" asp-for="EnrollmentMonth" />
+        </div>
+    </div>
+
+    <div class="row form-group">
         <label asp-for="PaidBy" class="col-md-2 col-form-label"></label>
         <div class="col-md-4">
             <select id="drpPaidBy" class="form-control" asp-for="PaidBy" asp-items="@(new SelectList(Model.PaidByList, "School"))">
@@ -70,6 +80,14 @@
         <div class="col-md-4">
             <input asp-for="CheckNo" class="form-control" />
             <span asp-validation-for="CheckNo" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row form-group">
+        <label asp-for="Comments" class="col-md-2 col-form-label"></label>
+        <div class="col-md-10">
+            <input asp-for="Comments" class="form-control" />
+            <span asp-validation-for="Comments" class="text-danger"></span>
         </div>
     </div>
 

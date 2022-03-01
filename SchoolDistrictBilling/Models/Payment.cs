@@ -20,6 +20,8 @@ namespace SchoolDistrictBilling.Models
             CheckNo = view.CheckNo;
             Amount = view.Amount;
             PaidBy = view.PaidBy;
+            EnrollmentMonth = view.EnrollmentMonth;
+            Comments = view.Comments;
         }
 
         [Column("payment_uid")]
@@ -53,5 +55,13 @@ namespace SchoolDistrictBilling.Models
         [Column("paid_by")]
         [StringLength(255)]
         public string PaidBy { get; set; }
+
+        [Column("enrollment_month")]
+        [StringLength(255)]
+        public string EnrollmentMonth { get; set; }
+
+        [Column("comments")]
+        [StringLength(255)]
+        public string Comments { get; set; }
     }
 }
