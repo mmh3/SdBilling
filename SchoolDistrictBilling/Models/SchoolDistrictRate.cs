@@ -17,6 +17,7 @@ namespace SchoolDistrictBilling.Models
             SpedRate = rate.SchoolDistrictRate.SpedRate;
             EffectiveDate = rate.SchoolDistrictRate.EffectiveDate;
             Notes = rate.SchoolDistrictRate.Notes;
+            ThreeSixtyThreeFlag = rate.SchoolDistrictRate.ThreeSixtyThreeFlag;
         }
 
         [Column("school_district_rate_uid")]
@@ -48,5 +49,9 @@ namespace SchoolDistrictBilling.Models
         [Column("notes")]
         [StringLength(255)]
         public string Notes { get; set; }
+
+        [Column("363_flag")]
+        [DisplayName("363")]
+        public bool ThreeSixtyThreeFlag { get; set; }
     }
 }
