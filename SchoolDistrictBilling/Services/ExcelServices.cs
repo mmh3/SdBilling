@@ -4,13 +4,12 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using SchoolDistrictBilling.Data;
 using SchoolDistrictBilling.Models;
+using SchoolDistrictBilling.Reports;
 
 namespace SchoolDistrictBilling.Services
 {
@@ -177,6 +176,7 @@ namespace SchoolDistrictBilling.Services
                         for (int i = worksheet.Dimension.Start.Row; i <= worksheet.Dimension.End.Row; i++)
                         {
                             Student student = new Student();
+
                             student.CharterSchoolUid = charterSchoolUid;
                             checkForColumnHeaders = (columns.Count() == 0);
                             // reset this value if the last row was the headers row
@@ -443,8 +443,10 @@ namespace SchoolDistrictBilling.Services
                     reconSheet.Cells["E10"].Value = nonSpedStudentTotalDaysInSession;
                     reconSheet.Cells["E11"].Value = spedStudentTotalDaysInSession;
 
-                    var reconFile = SaveExcelFile(ReportType.YearEnd, reconciliation, rootPath, criteria, charterSchoolName, schoolDistrictName);
+                    var reconFile = SaveExcelFile(FileType.YearEnd, reconciliation, rootPath, criteria, charterSchoolName, schoolDistrictName);
                     fileNames.Add(reconFile.FullName);
+                    // Add an audit record that we generated this report.
+                    context.Add(new ReportHistory(ReportType.YearEnd, criteria.CharterSchoolUid, schoolDistrict.SchoolDistrictUid, criteria.SendTo, int.Parse(criteria.Year)));
 
                     // Payments can insert rows and mess up the sheet for future iterations of the loop. Re-open the recon sheet
                     // and apply to that instead of doing it before saving.
@@ -500,15 +502,17 @@ namespace SchoolDistrictBilling.Services
             //}
 
             var charterSchoolName = context.CharterSchools.Find(criteria.CharterSchoolUid).Name;
-            var headerDateRange = "For the Months of July " + GetStartYear(criteria.Month, criteria.Year) + " to " + criteria.Month + " " + criteria.Year;
+            var headerDateRange = "For the Months of July " + DateServices.GetStartYear(criteria.Month, criteria.Year) + " to " + criteria.Month + " " + criteria.Year;
 
             if (criteria.SendTo == SubmitTo.PDE.ToString())
             {
                 List<string> files = new List<string>();
-                if (UpdateInvoiceForPde(context, criteria, rootPath, charterSchoolName, out files))
-                {
-                    return files;
-                }
+
+                files.Add(new PdeCsrStudentList(context, rootPath).Generate(criteria));
+                files.Add(new PdeCsrDirectPayment(context, rootPath).Generate(criteria));
+                files.Add(new PdeCsrTuitionRate(context, rootPath).Generate(criteria));
+
+                return files;
             }
 
             FileInfo invoiceTemplate = new FileInfo(rootPath + "/reportTemplates/MonthlyInvoice.xlsx");
@@ -581,8 +585,10 @@ namespace SchoolDistrictBilling.Services
                             AddSchoolToUnipayRequest(unipayFile, invoiceSheet, unipayRow++, schoolDistrict);
                         }
 
-                        var invoiceFile = SaveExcelFile(ReportType.Invoice, invoice, rootPath, criteria, charterSchoolName, schoolDistrictName);
-                        SaveExcelFile(ReportType.Student, student, rootPath, criteria, charterSchoolName, schoolDistrictName);
+                        var invoiceFile = SaveExcelFile(FileType.Invoice, invoice, rootPath, criteria, charterSchoolName, schoolDistrictName);
+                        SaveExcelFile(FileType.Student, student, rootPath, criteria, charterSchoolName, schoolDistrictName);
+                        // Add an audit record that we generated this report.
+                        context.Add(new ReportHistory(ReportType.Invoice, criteria.CharterSchoolUid, schoolDistrict.SchoolDistrictUid, criteria.SendTo, criteria.Month, int.Parse(criteria.Year)));
 
                         // Payments can insert rows and mess up the sheet for future iterations of the loop. Re-open the invoice
                         // and apply to that instead of doing it before saving.
@@ -596,7 +602,7 @@ namespace SchoolDistrictBilling.Services
                     }
                 }
 
-                return Directory.EnumerateFiles(GetReportPath(ReportType.Invoice, rootPath, criteria, charterSchoolName)/*, "*.pdf"*/);
+                return Directory.EnumerateFiles(FileSystemServices.GetReportPath(FileType.Invoice, rootPath, criteria, charterSchoolName)/*, "*.pdf"*/);
             }
         }
 
@@ -661,7 +667,7 @@ namespace SchoolDistrictBilling.Services
 
         private static void PopulateInvoicePayments(ExcelWorksheet invoiceSheet, AppDbContext context, ReportCriteriaView criteria, SchoolDistrict schoolDistrict)
         {
-            var startDate = new DateTime(int.Parse(GetStartYear(criteria.Month, criteria.Year)), 7, 1);
+            var startDate = new DateTime(int.Parse(DateServices.GetStartYear(criteria.Month, criteria.Year)), 7, 1);
             var monthInt = DateTime.ParseExact(criteria.Month, "MMMM", CultureInfo.CurrentCulture).Month;
             var endDate = new DateTime(int.Parse(criteria.Year), monthInt, 1).AddMonths(1).AddDays(-1).AddHours(23).AddMinutes(59).AddSeconds(59);
 
@@ -729,7 +735,7 @@ namespace SchoolDistrictBilling.Services
         {
             FileInfo unipayRequestFile = null;
             FileInfo unipayTemplate = new FileInfo(rootPath + "/reportTemplates/MonthlyUnipayRequest.xlsx");
-            var headerDateRange = "For the Months of July " + GetStartYear(criteria.Month, criteria.Year) + " to " + criteria.Month + " " + criteria.Year;
+            var headerDateRange = "For the Months of July " + DateServices.GetStartYear(criteria.Month, criteria.Year) + " to " + criteria.Month + " " + criteria.Year;
 
             using (ExcelPackage unipay = new ExcelPackage(unipayTemplate))
             {
@@ -740,7 +746,7 @@ namespace SchoolDistrictBilling.Services
                 unipaySheet.Cells["D4"].Value = "                                        Submission for " + criteria.Month + " " + criteria.Year + " Unipay";
                 unipaySheet.Cells["F6"].Value = DateTime.Now.Date.ToString("MM/dd/yyyy");
 
-                unipayRequestFile = SaveExcelFile(ReportType.Unipay, unipay, rootPath, criteria, charterSchoolName);
+                unipayRequestFile = SaveExcelFile(FileType.Unipay, unipay, rootPath, criteria, charterSchoolName);
             }
 
             return unipayRequestFile;
@@ -775,7 +781,7 @@ namespace SchoolDistrictBilling.Services
             {
                 if (!string.IsNullOrEmpty(sdName))
                 {
-                    var invoiceFileName = GetReportFileName(ReportType.Invoice, rootPath, criteria, charterSchoolName, sdName);
+                    var invoiceFileName = FileSystemServices.GetReportFileName(FileType.Invoice, rootPath, criteria, charterSchoolName, sdName);
                     if (!File.Exists(invoiceFileName))
                     {
                         // If the file doesn't exist, return false so we know we have to generate it now.
@@ -797,7 +803,7 @@ namespace SchoolDistrictBilling.Services
                         // Add this invoice and student template to the list of files that were updated.
                         result = true;
                         fileNames.Add(invoiceFileName);
-                        fileNames.Add(GetReportFileName(ReportType.Student, rootPath, criteria, charterSchoolName, sdName));
+                        fileNames.Add(FileSystemServices.GetReportFileName(FileType.Student, rootPath, criteria, charterSchoolName, sdName));
                     }
                 }
             }
@@ -1068,11 +1074,11 @@ namespace SchoolDistrictBilling.Services
             }
         }
 
-        private static FileInfo SaveExcelFile(ReportType type, ExcelPackage excel, string rootPath, ReportCriteriaView criteria, string charterSchoolName, string schoolDistrictName = null)
+        private static FileInfo SaveExcelFile(FileType type, ExcelPackage excel, string rootPath, ReportCriteriaView criteria, string charterSchoolName, string schoolDistrictName = null)
         {
-            string fileName = GetReportFileName(type, rootPath, criteria, charterSchoolName, schoolDistrictName);
+            string fileName = FileSystemServices.GetReportFileName(type, rootPath, criteria, charterSchoolName, schoolDistrictName);
 
-            Directory.CreateDirectory(GetReportPath(type, rootPath, criteria, charterSchoolName));
+            Directory.CreateDirectory(FileSystemServices.GetReportPath(type, rootPath, criteria, charterSchoolName));
             FileInfo outputFile = new FileInfo(fileName);
             excel.SaveAs(outputFile);
 
@@ -1095,61 +1101,6 @@ namespace SchoolDistrictBilling.Services
             //Task.Run(() => httpClient.PostAsync(url, new StringContent(null)).GetAwaiter().GetResult());
             _ = httpClient.PostAsync(url, null).Result;
         }
-
-        private static string GetReportFileName(ReportType type, string rootPath, ReportCriteriaView criteria, string charterSchoolName, string schoolDistrictName)
-        {
-            string outputFilePath = GetReportPath(type, rootPath, criteria, charterSchoolName);
-
-            switch (type)
-            {
-                case ReportType.Invoice:
-                    return Path.Combine(outputFilePath, criteria.Month + criteria.Year + Regex.Replace(schoolDistrictName, @"\s+", "") + ".xlsx");
-
-                case ReportType.Student:
-                    return Path.Combine(outputFilePath, criteria.Month + criteria.Year + Regex.Replace(schoolDistrictName, @"\s+", "") + "Student.xlsx");
-
-                case ReportType.Unipay:
-                    return Path.Combine(outputFilePath, Regex.Replace(charterSchoolName, @"\s+", "") + "Unipay.xlsx");
-
-                case ReportType.YearEnd:
-                    return Path.Combine(outputFilePath, criteria.Year + Regex.Replace(schoolDistrictName, @"\s+", "") + "YearEnd.xlsx");
-
-                default:
-                    throw new Exception("Invalid report type passed to GetReportFileName.");
-            }
-        }
-        private static string GetReportPath(ReportType type, string rootPath, ReportCriteriaView criteria, string charterSchoolName)
-        {
-            if (type == ReportType.YearEnd)
-            {
-                return Path.Combine(new string[] { rootPath, "reports", Regex.Replace(charterSchoolName, @"\s+", ""), criteria.Year });
-            }
-            else
-            {
-                return Path.Combine(new string[] { rootPath, "reports", Regex.Replace(charterSchoolName, @"\s+", ""), criteria.Year, criteria.Month });
-            }
-        }
-
-        private static string GetStartYear(string month, string currentYear)
-        {
-            var secondHalfMonths = new List<string> { "July", "August", "September", "October", "November", "December" };
-            if (secondHalfMonths.Contains(month))
-            {
-                return currentYear;
-            }
-            else
-            {
-                return (int.Parse(currentYear) - 1).ToString();
-            }
-        }
-    }
-
-    enum ReportType
-    {
-        Invoice,
-        Student,
-        Unipay,
-        YearEnd
     }
 
     enum SubmitTo
