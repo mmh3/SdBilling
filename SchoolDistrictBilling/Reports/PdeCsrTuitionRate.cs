@@ -63,10 +63,19 @@ namespace SchoolDistrictBilling.Reports
 
         private DateTime? GetSentToSdValue(ReportCriteriaView criteria, SchoolDistrict schoolDistrict)
         {
-            return _dbContext.GetMostRecentSDReportDate(ReportType.Invoice,
+            ReportType reportType = ReportType.Invoice;
+            string month = criteria.Month;
+
+            if (criteria.IsYearEndRecon)
+            {
+                reportType = ReportType.YearEnd;
+                month = null;
+            }
+
+            return _dbContext.GetMostRecentSDReportDate(reportType,
                                                         criteria.CharterSchoolUid,
                                                         schoolDistrict.SchoolDistrictUid,
-                                                        criteria.Month,
+                                                        month,
                                                         int.Parse(criteria.Year));
         }
 

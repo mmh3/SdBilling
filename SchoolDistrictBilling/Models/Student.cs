@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
 using SchoolDistrictBilling.Data;
 
 namespace SchoolDistrictBilling.Models
@@ -146,21 +144,34 @@ namespace SchoolDistrictBilling.Models
 
         public void GetMonthlyAttendanceValue(AppDbContext context, int month, int year, out decimal spedAttendance, out decimal nonSpedAttendance)
         {
+            var schedule = context.GetCharterSchoolSchedule(CharterSchoolUid, Grade, month, year);
             DateTime firstDayOfMonth = new DateTime(year, month, 1);
             DateTime lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1).Date.AddHours(23).AddMinutes(59).AddSeconds(59);
+            
+            GetPeriodAttendanceValue(context, schedule, firstDayOfMonth, lastDayOfMonth, out spedAttendance, out nonSpedAttendance);
+        }
 
+        public void GetYearlyAttendanceValue(AppDbContext context, int year, out decimal spedAttendance, out decimal nonSpedAttendance)
+        {
+            var schedule = context.GetCharterSchoolSchedule(CharterSchoolUid, Grade, year);
+
+            GetPeriodAttendanceValue(context, schedule, schedule.FirstDay, schedule.LastDay, out spedAttendance, out nonSpedAttendance);
+        }
+
+        private void GetPeriodAttendanceValue(AppDbContext context, CharterSchoolSchedule schedule, DateTime startDate, DateTime endDate, out decimal spedAttendance, out decimal nonSpedAttendance)
+        {
             if (DistrictEntryDate == null)
             {
                 throw new Exception("Student " + StateStudentNo + " does not have a district entry date.");
             }
 
-            if (DidAttendForEntirePeriod(firstDayOfMonth, lastDayOfMonth))
+            if (DidAttendForEntirePeriod(startDate, endDate))
             {
                 // If the student attended this school for the whole month, they're a full student. Check if we
                 // need to split the month between sped and non-sped buckets.
-                if (IsSpedOnDate(firstDayOfMonth) == IsSpedOnDate(lastDayOfMonth))
+                if (IsSpedOnDate(startDate) == IsSpedOnDate(endDate))
                 {
-                    if (IsSpedOnDate(firstDayOfMonth))
+                    if (IsSpedOnDate(startDate))
                     {
                         spedAttendance = 1;
                         nonSpedAttendance = 0;
@@ -173,81 +184,79 @@ namespace SchoolDistrictBilling.Models
                 }
                 else
                 {
-                    var schedule = context.GetCharterSchoolSchedule(CharterSchoolUid, Grade, month, year);
                     if (schedule == null)
                     {
                         spedAttendance = nonSpedAttendance = 0;
                         return;
                     }
 
-                    var daysInMonth = schedule.GetSchoolDays(context, firstDayOfMonth, lastDayOfMonth);
+                    var daysInPeriod = schedule.GetSchoolDays(context, startDate, endDate);
 
                     //TODO: Handle the situation where the student exited sped during the month - will this
                     // be based on a sped exit date field or the prior IEP just expiring after a year?
-                    spedAttendance = decimal.Round(schedule.GetSchoolDays(context, (DateTime)CurrentIepDate, lastDayOfMonth) / (decimal)daysInMonth, 3);
+                    spedAttendance = decimal.Round(schedule.GetSchoolDays(context, (DateTime)CurrentIepDate, endDate) / (decimal)daysInPeriod, 3);
                     nonSpedAttendance = 1 - spedAttendance;
                 }
             }
             else
             {
-                var schedule = context.GetCharterSchoolSchedule(CharterSchoolUid, Grade, month, year);
                 if (schedule == null)
                 {
                     spedAttendance = nonSpedAttendance = 0;
                     return;
                 }
 
-                var daysInMonth = schedule.GetSchoolDays(context, firstDayOfMonth, lastDayOfMonth);
+                var daysInPeriod = schedule.GetSchoolDays(context, startDate, endDate);
 
                 //TODO: Account for scenario where student entered and exited within the month!!!
                 // Student started mid-month
-                if (DistrictEntryDate >= firstDayOfMonth)
+                if (DistrictEntryDate >= startDate)
                 {
-                    if (IsSpedOnDate(firstDayOfMonth) == IsSpedOnDate(lastDayOfMonth))
+                    if (IsSpedOnDate(startDate) == IsSpedOnDate(endDate))
                     {
-                        if (IsSpedOnDate(firstDayOfMonth))
+                        if (IsSpedOnDate(startDate))
                         {
-                            spedAttendance = decimal.Round(schedule.GetSchoolDays(context, (DateTime)DistrictEntryDate, lastDayOfMonth) / (decimal)daysInMonth, 3);
+                            spedAttendance = decimal.Round(schedule.GetSchoolDays(context, (DateTime)DistrictEntryDate, endDate) / (decimal)daysInPeriod, 3);
                             nonSpedAttendance = 0;
                         }
                         else
                         {
                             spedAttendance = 0;
-                            nonSpedAttendance = decimal.Round(schedule.GetSchoolDays(context, (DateTime)DistrictEntryDate, lastDayOfMonth) / (decimal)daysInMonth, 3);
+                            nonSpedAttendance = decimal.Round(schedule.GetSchoolDays(context, (DateTime)DistrictEntryDate, endDate) / (decimal)daysInPeriod, 3);
                         }
                     }
                     else
                     {
                         //TODO: Handle the situation where the student exited sped during the month - will this
                         // be based on a sped exit date field or the prior IEP just expiring after a year?
-                        //******TODO: Is this going to calculate completely correctly or is it going to count the Current IEP Start Date in BOTH???
-                        spedAttendance = decimal.Round(schedule.GetSchoolDays(context, (DateTime)CurrentIepDate, lastDayOfMonth) / (decimal)daysInMonth, 3);
-                        nonSpedAttendance = decimal.Round(schedule.GetSchoolDays(context, (DateTime)DistrictEntryDate, (DateTime)CurrentIepDate) / (decimal)daysInMonth, 3);
+                        spedAttendance = decimal.Round(schedule.GetSchoolDays(context, (DateTime)CurrentIepDate, endDate) / (decimal)daysInPeriod, 3);
+                        // Calculate non-sped up to the date before the IEP start date.
+                        nonSpedAttendance = decimal.Round(schedule.GetSchoolDays(context, (DateTime)DistrictEntryDate, ((DateTime)CurrentIepDate).AddDays(-1)) / (decimal)daysInPeriod, 3);
                     }
                 }
                 // Student exited mid-month
                 else
                 {
-                    if (IsSpedOnDate(firstDayOfMonth) == IsSpedOnDate(lastDayOfMonth))
+                    if (IsSpedOnDate(startDate) == IsSpedOnDate(endDate))
                     {
-                        if (IsSpedOnDate(firstDayOfMonth))
+                        if (IsSpedOnDate(startDate))
                         {
-                            spedAttendance = decimal.Round(schedule.GetSchoolDays(context, firstDayOfMonth, (DateTime)ExitDate) / (decimal)daysInMonth, 3);
+                            spedAttendance = decimal.Round(schedule.GetSchoolDays(context, startDate, (DateTime)ExitDate) / (decimal)daysInPeriod, 3);
                             nonSpedAttendance = 0;
                         }
                         else
                         {
                             spedAttendance = 0;
-                            nonSpedAttendance = decimal.Round(schedule.GetSchoolDays(context, firstDayOfMonth, (DateTime)ExitDate) / (decimal)daysInMonth, 3);
+                            nonSpedAttendance = decimal.Round(schedule.GetSchoolDays(context, startDate, (DateTime)ExitDate) / (decimal)daysInPeriod, 3);
                         }
                     }
                     else
                     {
                         //TODO: Handle the situation where the student exited sped during the month - will this
                         // be based on a sped exit date field or the prior IEP just expiring after a year?
-                        //******TODO: Is this going to calculate completely correctly or is it going to count the Current IEP Start Date in BOTH???
-                        spedAttendance = decimal.Round(schedule.GetSchoolDays(context, (DateTime)CurrentIepDate, (DateTime)ExitDate) / (decimal)daysInMonth, 3);
-                        nonSpedAttendance = decimal.Round(schedule.GetSchoolDays(context, firstDayOfMonth, (DateTime)CurrentIepDate) / (decimal)daysInMonth, 3);
+                        spedAttendance = decimal.Round(schedule.GetSchoolDays(context, (DateTime)CurrentIepDate, (DateTime)ExitDate) / (decimal)daysInPeriod, 3);
+                        // Calculate non-sped up to the date before the IEP start date.
+                        nonSpedAttendance = decimal.Round(schedule.GetSchoolDays(context, startDate, ((DateTime)CurrentIepDate).AddDays(-1)) / (decimal)daysInPeriod, 3);
                     }
                 }
             }

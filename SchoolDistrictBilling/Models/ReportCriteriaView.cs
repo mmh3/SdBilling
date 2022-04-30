@@ -34,6 +34,7 @@ namespace SchoolDistrictBilling.Models
         [BindProperty]
         [Display(Name = "School District(s)")]
         public string[] SelectedSchoolDistricts { get; set; }
+        public bool IsYearEndRecon { get; set; }
 
         public void OnGet()
         {

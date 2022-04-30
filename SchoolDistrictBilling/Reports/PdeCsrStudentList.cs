@@ -30,7 +30,7 @@ namespace SchoolDistrictBilling.Reports
             {
                 ExcelWorksheet sheet = studentList.Workbook.Worksheets.Add("Sheet1");
 
-                PopulateHeaderRow(sheet);
+                PopulateHeaderRow(sheet, criteria);
 
                 foreach (var sdName in criteria.SelectedSchoolDistricts)
                 {
@@ -39,10 +39,22 @@ namespace SchoolDistrictBilling.Reports
                         var schoolDistrict = _dbContext.SchoolDistricts.Where(sd => sd.Name == sdName).FirstOrDefault();
                         var students = _dbContext.GetStudents(criteria.CharterSchoolUid, schoolDistrict.Aun);
 
-                        AddStudents(sheet, schoolDistrict, students, schedules, criteria.Month, int.Parse(criteria.Year));
+                        if (criteria.IsYearEndRecon)
+                        {
+                            AddStudentsToReconciliation(sheet, schoolDistrict, students, schedules, int.Parse(criteria.Year));
+                        }
+                        else
+                        {
+                            AddStudentsToInvoice(sheet, schoolDistrict, students, schedules, criteria.Month, int.Parse(criteria.Year));
+                        }
 
                         // Add an audit record that we generated this report.
-                        _dbContext.Add(new ReportHistory(ReportType.Invoice, criteria.CharterSchoolUid, schoolDistrict.SchoolDistrictUid, criteria.SendTo, criteria.Month, int.Parse(criteria.Year)));
+                        ReportType reportType = ReportType.Invoice;
+                        if (criteria.IsYearEndRecon)
+                        {
+                            reportType = ReportType.YearEnd;
+                        }
+                        _dbContext.Add(new ReportHistory(reportType, criteria.CharterSchoolUid, schoolDistrict.SchoolDistrictUid, criteria.SendTo, criteria.Month, int.Parse(criteria.Year)));
                     }
                 }
 
@@ -55,11 +67,11 @@ namespace SchoolDistrictBilling.Reports
             return fileName;
         }
 
-        private void AddStudents(ExcelWorksheet sheet, SchoolDistrict schoolDistrict, List<Student> students, List<CharterSchoolSchedule> schedules, string invoiceMonth, int year)
+        private void AddStudentsToInvoice(ExcelWorksheet sheet, SchoolDistrict schoolDistrict, List<Student> students, List<CharterSchoolSchedule> schedules, string invoiceMonth, int year)
         {
             List<int> invoiceMonths = new List<int>() { 7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5 };
             int intInvoiceMonth = DateTime.ParseExact(invoiceMonth, "MMMM", CultureInfo.CurrentCulture).Month;
-            List<string> invoiceMonthNames = new List<string>() { "July", "August", "September", "October", "November", "December", "January", "February", "March", "April", "May" };
+            List<string> invoiceMonthNames = new List<string>() { "JUL", "AUG", "SEP", "OCT", "NOV", "DEC", "JAN", "FEB", "MAR", "APR", "MAY" };
 
             int row = sheet.Dimension.End.Row + 1;
             foreach (var student in students)
@@ -91,35 +103,66 @@ namespace SchoolDistrictBilling.Reports
                         continue;
                     }
 
-                    sheet.Cells["A" + row.ToString()].Value = student.StateStudentNo;
-                    sheet.Cells["B" + row.ToString()].Value = invoiceMonthNames[i];
-                    sheet.Cells["C" + row.ToString()].Value = student.Aun;
-                    sheet.Cells["D" + row.ToString()].Value = schoolDistrict.Name;
-                    sheet.Cells["E" + row.ToString()].Value = (student.PriorIepDate != null && student.CurrentIepDate != null) || student.CurrentIepDate < lastDayOfMonth ? "SP" : "NS";
-                    sheet.Cells["F" + row.ToString()].Style.Numberformat.Format = "mm/dd/yyyy";
-                    sheet.Cells["F" + row.ToString()].Value = student.Dob;
-                    sheet.Cells["G" + row.ToString()].Value = student.Grade;
-                    sheet.Cells["H" + row.ToString()].Value = student.AddressStreet;
-                    sheet.Cells["I" + row.ToString()].Value = "";
-                    sheet.Cells["J" + row.ToString()].Value = student.AddressCity;
-                    sheet.Cells["K" + row.ToString()].Value = student.AddressState;
-                    sheet.Cells["L" + row.ToString()].Value = student.AddressZip;
-                    sheet.Cells["M" + row.ToString()].Style.Numberformat.Format = "mm/dd/yyyy";
-                    sheet.Cells["M" + row.ToString()].Value = student.CurrentIepDate;
-                    sheet.Cells["N" + row.ToString()].Style.Numberformat.Format = "mm/dd/yyyy";
-                    sheet.Cells["N" + row.ToString()].Value = student.PriorIepDate;
-                    sheet.Cells["O" + row.ToString()].Value = "Y";
-                    sheet.Cells["P" + row.ToString()].Style.Numberformat.Format = "mm/dd/yyyy";
-                    sheet.Cells["P" + row.ToString()].Value = student.DistrictEntryDate;
-                    sheet.Cells["Q" + row.ToString()].Style.Numberformat.Format = "mm/dd/yyyy";
-                    sheet.Cells["Q" + row.ToString()].Value = student.ExitDate;
-
+                    bool isSped = (student.PriorIepDate != null && student.CurrentIepDate != null) || student.CurrentIepDate < lastDayOfMonth;
+                    AddStudentRow(sheet, row, student, schoolDistrict, invoiceMonthNames[i], isSped, 0);
                     row++;
                 }
             }
         }
 
-        private void PopulateHeaderRow(ExcelWorksheet sheet)
+        private void AddStudentsToReconciliation(ExcelWorksheet sheet, SchoolDistrict schoolDistrict, List<Student> students, List<CharterSchoolSchedule> schedules, int year)
+        {
+            int row = sheet.Dimension.End.Row + 1;
+            foreach (var student in students)
+            {
+                student.GetYearlyAttendanceValue(_dbContext, year, out decimal spedAttendance, out decimal nonSpedAttendance);
+
+                if (spedAttendance > 0)
+                {
+                    AddStudentRow(sheet, row, student, schoolDistrict, "REC", true, spedAttendance);
+                    row++;
+                }
+
+                if (nonSpedAttendance > 0)
+                {
+                    AddStudentRow(sheet, row, student, schoolDistrict, "REC", false, nonSpedAttendance);
+                    row++;
+                }
+            }
+        }
+
+        private void AddStudentRow(ExcelWorksheet sheet, int row, Student student, SchoolDistrict schoolDistrict, string month, bool IsSped, decimal adm)
+        {
+            sheet.Cells["A" + row.ToString()].Value = student.StateStudentNo;
+            sheet.Cells["B" + row.ToString()].Value = month;
+            sheet.Cells["C" + row.ToString()].Value = student.Aun;
+            sheet.Cells["D" + row.ToString()].Value = schoolDistrict.Name;
+            sheet.Cells["E" + row.ToString()].Value = IsSped ? "SP" : "NS";
+            sheet.Cells["F" + row.ToString()].Style.Numberformat.Format = "mm-dd-yyyy";
+            sheet.Cells["F" + row.ToString()].Value = student.Dob;
+            sheet.Cells["G" + row.ToString()].Value = student.Grade;
+            sheet.Cells["H" + row.ToString()].Value = student.AddressStreet;
+            sheet.Cells["I" + row.ToString()].Value = "";
+            sheet.Cells["J" + row.ToString()].Value = student.AddressCity;
+            sheet.Cells["K" + row.ToString()].Value = student.AddressState;
+            sheet.Cells["L" + row.ToString()].Value = student.AddressZip;
+            sheet.Cells["M" + row.ToString()].Style.Numberformat.Format = "mm-dd-yyyy";
+            sheet.Cells["M" + row.ToString()].Value = student.CurrentIepDate;
+            sheet.Cells["N" + row.ToString()].Style.Numberformat.Format = "mm-dd-yyyy";
+            sheet.Cells["N" + row.ToString()].Value = student.PriorIepDate;
+            sheet.Cells["O" + row.ToString()].Value = "Y";
+            sheet.Cells["P" + row.ToString()].Style.Numberformat.Format = "mm-dd-yyyy";
+            sheet.Cells["P" + row.ToString()].Value = student.DistrictEntryDate;
+            sheet.Cells["Q" + row.ToString()].Style.Numberformat.Format = "mm-dd-yyyy";
+            sheet.Cells["Q" + row.ToString()].Value = student.ExitDate;
+
+            if (adm > 0)
+            {
+                sheet.Cells["R" + row.ToString()].Value = adm;
+            }
+        }
+
+        private void PopulateHeaderRow(ExcelWorksheet sheet, ReportCriteriaView criteria)
         {
             sheet.Cells["A1"].Value = "PAsecureID";
             sheet.Cells["B1"].Value = "Enrollment Month";
@@ -138,6 +181,11 @@ namespace SchoolDistrictBilling.Reports
             sheet.Cells["O1"].Value = "CSSENF Indicator";
             sheet.Cells["P1"].Value = "First Day Educated";
             sheet.Cells["Q1"].Value = "Last Day Educated";
+
+            if (criteria.IsYearEndRecon)
+            {
+                sheet.Cells["R1"].Value = "ADM";
+            }
         }
     }
 }

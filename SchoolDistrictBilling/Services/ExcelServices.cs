@@ -364,6 +364,9 @@ namespace SchoolDistrictBilling.Services
 
         public static IEnumerable<string> GenerateYearEndRecon(AppDbContext context, string rootPath, ReportCriteriaView criteria)
         {
+            criteria.IsYearEndRecon = true;
+            criteria.Month = "May";
+
             var fileNames = new List<string>();
 
             FileInfo reconTemplate = new FileInfo(rootPath + "/reportTemplates/YearEndReconciliation.xlsx");
@@ -373,7 +376,17 @@ namespace SchoolDistrictBilling.Services
             {
                 ExcelWorksheet reconSheet = reconciliation.Workbook.Worksheets.FirstOrDefault();
 
-                //TODO: Generate for PDE
+                //Generate for PDE
+                if (criteria.SendTo == SubmitTo.PDE.ToString())
+                {
+                    List<string> files = new List<string>();
+
+                    files.Add(new PdeCsrStudentList(context, rootPath).Generate(criteria));
+                    files.Add(new PdeCsrDirectPayment(context, rootPath).Generate(criteria));
+                    files.Add(new PdeCsrTuitionRate(context, rootPath).Generate(criteria));
+
+                    return files;
+                }
 
                 //Replace header information
                 reconSheet.Cells["E1"].Value = charterSchoolName;
