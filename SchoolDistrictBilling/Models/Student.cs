@@ -103,45 +103,6 @@ namespace SchoolDistrictBilling.Models
         [Display(Name = "School District")]
         public string Aun { get; set; }
 
-        public int GetAttendanceCount(AppDbContext context, int year, out DateTime lastDayOfYear)
-        {
-            if (DistrictEntryDate == null)
-            {
-                throw new Exception("Student " + StateStudentNo + " does not have a district entry date.");
-            }
-
-            var schedule = context.GetCharterSchoolSchedule(CharterSchoolUid, Grade, year);
-            lastDayOfYear = schedule.LastDay.Date;
-
-            if (DistrictEntryDate >= schedule.FirstDay && (ExitDate != null && ExitDate <= schedule.LastDay))
-            {
-                return schedule.GetSchoolDays(context, (DateTime)DistrictEntryDate, (DateTime)ExitDate);
-            }
-            else if (DistrictEntryDate >= schedule.FirstDay)
-            {
-                return schedule.GetSchoolDays(context, (DateTime)DistrictEntryDate, schedule.LastDay);
-            }
-            else if (ExitDate != null && ExitDate <= schedule.LastDay)
-            {
-                return schedule.GetSchoolDays(context, schedule.FirstDay, (DateTime)ExitDate);
-            }
-            else
-            {
-                return schedule.GetSchoolDays(context, schedule.FirstDay, schedule.LastDay);
-            }
-        }
-
-        public int GetDaysInSession(AppDbContext context, int year)
-        {
-            if (DistrictEntryDate == null)
-            {
-                throw new Exception("Student " + StateStudentNo + " does not have a district entry date.");
-            }
-
-            var schedule = context.GetCharterSchoolSchedule(CharterSchoolUid, Grade, year);
-            return schedule.GetSchoolDays(context, schedule.FirstDay, schedule.LastDay);
-        }
-
         public void GetMonthlyAttendanceValue(AppDbContext context, int month, int year, out decimal spedAttendance, out decimal nonSpedAttendance)
         {
             var schedule = context.GetCharterSchoolSchedule(CharterSchoolUid, Grade, month, year);
