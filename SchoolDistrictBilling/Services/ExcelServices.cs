@@ -413,48 +413,31 @@ namespace SchoolDistrictBilling.Services
                     // Select all students for this charter school and school district.
                     var students = context.GetStudents(criteria.CharterSchoolUid, aun);
 
+                    decimal nonSpedStudentCount = 0;
+                    decimal nonSpedStudentMembershipDays = 0;
+                    decimal spedStudentCount = 0;
+                    decimal spedStudentMembershipDays = 0;
+                    decimal daysInSession = 0;
 
-                    var nonSpedStudents = students.Where(s => string.IsNullOrEmpty(s.IepFlag) || s.IepFlag.ToUpper() == "N");
-                    int nonSpedStudentCount = 0;
-                    int nonSpedStudentMembershipDays = 0;
-                    int nonSpedStudentTotalDaysInSession = 0;
-                    DateTime lastDayOfYear = DateTime.Now.Date;
-
-                    foreach (var student in nonSpedStudents)
+                    foreach (var student in students)
                     {
-                        nonSpedStudentCount++;
-                        nonSpedStudentMembershipDays += student.GetAttendanceCount(context, int.Parse(criteria.Year), out lastDayOfYear);
-                        if (nonSpedStudentTotalDaysInSession == 0)
-                        {
-                            nonSpedStudentTotalDaysInSession = student.GetDaysInSession(context, int.Parse(criteria.Year));
-                        }
+                        student.GetYearlyAttendanceValue(context, int.Parse(criteria.Year), out decimal spedAttendance, out decimal spedDays, out decimal nonSpedAttendance, out decimal nonSpedDays, out daysInSession);
+
+                        spedStudentCount += Math.Ceiling(spedAttendance);
+                        spedStudentMembershipDays += spedDays;
+
+                        nonSpedStudentCount += Math.Ceiling(nonSpedAttendance);
+                        nonSpedStudentMembershipDays += nonSpedDays;
                     }
-
-                    var spedStudents = students.Where(s => s.IepFlag.ToUpper() == "Y");
-                    int spedStudentCount = 0;
-                    int spedStudentMembershipDays = 0;
-                    int spedStudentTotalDaysInSession = 0;
-                    foreach (var student in spedStudents)
-                    {
-                        spedStudentCount++;
-                        spedStudentMembershipDays += student.GetAttendanceCount(context, int.Parse(criteria.Year), out lastDayOfYear);
-                        if (spedStudentTotalDaysInSession == 0)
-                        {
-                            spedStudentTotalDaysInSession = student.GetDaysInSession(context, int.Parse(criteria.Year));
-                        }
-                    }
-
-                    PopulateAdm(reconSheet, context.GetSchoolDistrictRate(schoolDistrict.SchoolDistrictUid, lastDayOfYear), "G10");
-
-                    if (nonSpedStudentTotalDaysInSession == 0) nonSpedStudentTotalDaysInSession = spedStudentTotalDaysInSession;
-                    if (spedStudentTotalDaysInSession == 0) spedStudentTotalDaysInSession = nonSpedStudentTotalDaysInSession;
+                    
+                    PopulateRates(reconSheet, context.GetSchoolDistrictRate(schoolDistrict.SchoolDistrictUid, new DateTime(int.Parse(criteria.Year), 5, 1)), "G10");
 
                     reconSheet.Cells["C10"].Value = nonSpedStudentCount;
                     reconSheet.Cells["C11"].Value = spedStudentCount;
                     reconSheet.Cells["D10"].Value = nonSpedStudentMembershipDays;
                     reconSheet.Cells["D11"].Value = spedStudentMembershipDays;
-                    reconSheet.Cells["E10"].Value = nonSpedStudentTotalDaysInSession;
-                    reconSheet.Cells["E11"].Value = spedStudentTotalDaysInSession;
+                    reconSheet.Cells["E10"].Value = daysInSession;
+                    reconSheet.Cells["E11"].Value = daysInSession;
 
                     var reconFile = SaveExcelFile(FileType.YearEnd, reconciliation, rootPath, criteria, charterSchoolName, schoolDistrictName);
                     fileNames.Add(reconFile.FullName);
@@ -828,7 +811,7 @@ namespace SchoolDistrictBilling.Services
         private static void PopulateInvoiceSheet(AppDbContext context, ExcelWorksheet sheet, ReportCriteriaView criteria, List<Student> students, SchoolDistrictRate rate)
         {
             PopulateInvoiceMonthlyAmounts(context, criteria, sheet, students, rate);
-            PopulateAdm(sheet, rate, "M12");
+            PopulateRates(sheet, rate, "M12");
         }
 
         private static void PopulateStudentSheet(ExcelWorksheet sheet, List<Student> students)
@@ -927,7 +910,7 @@ namespace SchoolDistrictBilling.Services
             }
         }
 
-        private static void PopulateAdm(ExcelWorksheet sheet, SchoolDistrictRate rate, string startCell)
+        private static void PopulateRates(ExcelWorksheet sheet, SchoolDistrictRate rate, string startCell)
         {
             var nonSpedCell = startCell;
 
