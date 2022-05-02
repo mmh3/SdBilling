@@ -11,6 +11,9 @@ namespace SchoolDistrictBilling.Models
     [Table("charter_school_schedule")]
     public class CharterSchoolSchedule
     {
+        private int _totalDaysInYear = 0;
+        private Dictionary<string, int> _totalDaysInMonth = new Dictionary<string, int>();
+
         public CharterSchoolSchedule()
         {
             FirstDay = DateTime.Today.Date;
@@ -64,11 +67,22 @@ namespace SchoolDistrictBilling.Models
             return intGrade >= intStartGrade && intGrade <= intEndGrade;
         }
 
-        public int GetSchoolDays(AppDbContext context, DateTime from, DateTime to)
+        public int GetSchoolDays(AppDbContext context, DateTime from, DateTime to, bool isFullMonth = false, bool isFullYear = false)
         {
+            // If we're calcuating for the full year and we've already done it before, just return the days.
+            if (isFullYear && _totalDaysInYear > 0)
+            {
+                return _totalDaysInYear;
+            }
+
+            // If we're calculating for the full month and we already have it in our dictionary, use that value.
+            if (isFullMonth && _totalDaysInMonth.TryGetValue(from.ToString("MMMM"), out int daysInMonth))
+            {
+                return daysInMonth;
+            }
+
             var totalDays = 0;
 
-            //TODO: Is this going to be a performance problem for the year end reconciliation? Any more efficient way to do this?
             for (var date = from.Date; date <= to; date = date.AddDays(1))
             {
                 // If this date is before the first day of the school year or after the last day of the school year, skip it.
@@ -82,6 +96,18 @@ namespace SchoolDistrictBilling.Models
                 // If this is a weekday, add to the total days.
                 if (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday)
                     totalDays++;
+            }
+
+            // If calculating for the full year, save off the number of days so we can shortcut the logic next time.
+            if (isFullYear)
+            {
+                _totalDaysInYear = totalDays;
+            }
+
+            // If calcuating for the full month, add an entry to our dictionary with the days in the month.
+            if (isFullMonth)
+            {
+                _totalDaysInMonth.Add(from.ToString("MMMM"), totalDays);
             }
 
             return totalDays;

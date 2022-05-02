@@ -139,9 +139,15 @@ namespace SchoolDistrictBilling.Models
                 return;
             }
 
-            // TODO: If not calculating day count, this isn't necessary here - can we save the calcuation? Or can we just save the
-            // days in session on the schedule so it doesn't ever have to recalc???
-            daysInSession = schedule.GetSchoolDays(context, startDate, endDate);
+            var isFullYear = (startDate == schedule.FirstDay) && (endDate == schedule.LastDay);
+            if (isFullYear)
+            {
+                daysInSession = schedule.GetSchoolDays(context, startDate, endDate, false, true);
+            }
+            else
+            {
+                daysInSession = schedule.GetSchoolDays(context, startDate, endDate, true, false);
+            }
 
             if (DidAttendForEntirePeriod(startDate, endDate))
             {
