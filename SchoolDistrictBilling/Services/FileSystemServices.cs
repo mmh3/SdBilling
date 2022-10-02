@@ -37,6 +37,9 @@ namespace SchoolDistrictBilling.Services
                 case FileType.Student:
                     return Path.Combine(outputFilePath, criteria.Month + criteria.Year + Regex.Replace(schoolDistrictName, @"\s+", "") + "Student.xlsx");
 
+                case FileType.ReconStudent:
+                    return Path.Combine(outputFilePath, criteria.Year + Regex.Replace(schoolDistrictName, @"\s+", "") + "Student.xlsx");
+
                 case FileType.Unipay:
                     return Path.Combine(outputFilePath, Regex.Replace(charterSchoolName, @"\s+", "") + "Unipay.xlsx");
 

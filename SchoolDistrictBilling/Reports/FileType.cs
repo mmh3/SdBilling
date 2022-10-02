@@ -4,6 +4,7 @@
     {
         Invoice,
         Student,
+        ReconStudent,
         Unipay,
         YearEnd,
         PdeStudentList,

@@ -370,7 +370,8 @@ namespace SchoolDistrictBilling.Services
             var fileNames = new List<string>();
 
             FileInfo reconTemplate = new FileInfo(rootPath + "/reportTemplates/YearEndReconciliation.xlsx");
-            var charterSchoolName = context.CharterSchools.Find(criteria.CharterSchoolUid).Name;
+            var charterSchool = context.CharterSchools.Find(criteria.CharterSchoolUid);
+            var charterSchoolName = charterSchool.Name;
 
             using (ExcelPackage reconciliation = new ExcelPackage(reconTemplate))
             {
@@ -412,6 +413,40 @@ namespace SchoolDistrictBilling.Services
 
                     // Select all students for this charter school and school district.
                     var students = context.GetStudents(criteria.CharterSchoolUid, aun);
+
+
+
+
+                    ////////////////////////////////////
+                    // Generate the student template listing all students for the charter school / school district for the year.
+                    // TODO: Move to this to a method so the same thing can be called from monthly invoice and year end recon...
+                    // Each iteration, start with the empty student template so we don't have extra pages in here from the previous district.
+                    FileInfo studentTemplate = new FileInfo(rootPath + "/reportTemplates/ReconIndividualStudent.xlsx");
+                    using (ExcelPackage student = new ExcelPackage(studentTemplate))
+                    {
+                        ExcelWorksheet studentSheet = student.Workbook.Worksheets.FirstOrDefault();
+                        studentSheet.Cells["F1"].Value = charterSchoolName;
+
+                        // Set charter school information, including Remit To w/ address
+                        studentSheet.Cells["K1"].Value = charterSchool.Name;
+                        studentSheet.Cells["K2"].Value = charterSchool.AddressStreet;
+                        studentSheet.Cells["K3"].Value = charterSchool.AddressCity + ", " + charterSchool.AddressState + " " + charterSchool.AddressZip;
+                        studentSheet.Cells["K4"].Value = charterSchool.Phone;
+                        studentSheet.Cells["K6"].Value = DateTime.Now.Date.ToString("MM/dd/yyyy");
+
+                        // Set school district information
+                        studentSheet.Cells["B5"].Value = aun;
+                        studentSheet.Cells["B6"].Value = schoolDistrictName;
+
+                        PopulateStudentSheet(context, studentSheet, students, criteria);
+
+                        var reconStudentFile = SaveExcelFile(FileType.ReconStudent, student, rootPath, criteria, charterSchoolName, schoolDistrictName);
+                        fileNames.Add(reconStudentFile.FullName);
+                    }
+                    ///////////////////////////////////
+
+
+
 
                     decimal nonSpedStudentCount = 0;
                     decimal nonSpedStudentMembershipDays = 0;
@@ -574,7 +609,7 @@ namespace SchoolDistrictBilling.Services
                         var schoolDistrictRate = context.GetSchoolDistrictRate(schoolDistrict.SchoolDistrictUid, criteria.LastDayOfMonth());
 
                         PopulateInvoiceSheet(context, invoiceSheet, criteria, students, schoolDistrictRate);
-                        PopulateStudentSheet(studentSheet, students);
+                        PopulateStudentSheet(context, studentSheet, students, criteria);
 
                         if (unipayFile != null)
                         {
@@ -814,7 +849,7 @@ namespace SchoolDistrictBilling.Services
             PopulateRates(sheet, rate, "M12");
         }
 
-        private static void PopulateStudentSheet(ExcelWorksheet sheet, List<Student> students)
+        private static void PopulateStudentSheet(AppDbContext context, ExcelWorksheet sheet, List<Student> students, ReportCriteriaView criteria)
         {
             //TODO: this is just for testing for now
             //for (int j = 0; j < 421; j++)
@@ -824,11 +859,11 @@ namespace SchoolDistrictBilling.Services
 
             for (int i = 0; i < students.Count(); i++)
             {
-                AddStudent(sheet, students[i], i);
+                AddStudent(context, sheet, students[i], i, criteria);
             }
         }
 
-        private static void AddStudent(ExcelWorksheet sheet, Student student, int counter)
+        private static void AddStudent(AppDbContext context, ExcelWorksheet sheet, Student student, int counter, ReportCriteriaView criteria)
         {
             // Student data starts at row 12. Each additional student moves down by 4 rows.
             // After 8, copy the whole sheet over again so add 46 for each sheet.
@@ -859,9 +894,21 @@ namespace SchoolDistrictBilling.Services
             sheet.Cells["G" + secondRow].Value = ""; //Submitted date
             sheet.Cells["H" + secondRow].Value = student.DistrictEntryDate.HasValue ? student.DistrictEntryDate.Value.ToString("MM/dd/yyyy") : "";
             sheet.Cells["I" + secondRow].Value = student.ExitDate.HasValue ? student.ExitDate.Value.ToString("MM/dd/yyyy") : "";
-            sheet.Cells["J" + secondRow].Value = student.IepFlag == "Y" ? "Yes" : "No";
-            sheet.Cells["K" + secondRow].Value = student.CurrentIepDate.HasValue ? student.CurrentIepDate.Value.ToString("MM/dd/yyyy") : "";
-            sheet.Cells["K" + fourthRow].Value = student.PriorIepDate.HasValue ? student.PriorIepDate.Value.ToString("MM/dd/yyyy") : "";
+
+            var iepColumn = "J";
+            var iepDateColumn = "K";
+            if (criteria.IsYearEndRecon)
+            {
+                student.GetYearlyAttendanceValue(context, int.Parse(criteria.Year), out decimal spedAttendance, out decimal spedDays, out decimal nonSpedAttendance, out decimal nonSpedDays, out decimal daysInSession);
+                sheet.Cells["J" + secondRow].Value = spedDays + nonSpedDays;
+
+                iepColumn = "K";
+                iepDateColumn = "L";
+            }
+
+            sheet.Cells[iepColumn + secondRow].Value = student.IepFlag == "Y" ? "Yes" : "No";
+            sheet.Cells[iepDateColumn + secondRow].Value = student.CurrentIepDate.HasValue ? student.CurrentIepDate.Value.ToString("MM/dd/yyyy") : "";
+            sheet.Cells[iepDateColumn + fourthRow].Value = student.PriorIepDate.HasValue ? student.PriorIepDate.Value.ToString("MM/dd/yyyy") : "";
         }
 
         private static void ClearAndFormatCopiedSheet(ExcelWorksheet sheet, decimal sheetNum)
