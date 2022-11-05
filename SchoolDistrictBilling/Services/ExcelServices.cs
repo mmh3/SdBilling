@@ -857,7 +857,11 @@ namespace SchoolDistrictBilling.Services
             //    students.Add(students[0]);
             //}
 
-            for (int i = 0; i < students.Count(); i++)
+            DateTime firstDayOfSchool = context.GetCharterSchoolEarliestFirstDayOfSchool(criteria.CharterSchoolUid, int.Parse(DateServices.GetStartYear(criteria.Month, criteria.Year)));
+            var activeStudents = students.Where(s => s.ExitDate == null || s.ExitDate > firstDayOfSchool)
+                                         .ToList();
+
+            for (int i = 0; i < activeStudents.Count(); i++)
             {
                 AddStudent(context, sheet, students[i], i, criteria);
             }

@@ -78,6 +78,7 @@ namespace SchoolDistrictBilling.Data
         }
 
         // Get the charter school schedule for the given year, school and grade
+        // Year here is assumed to be the year at the END of the school year.
         public CharterSchoolSchedule GetCharterSchoolSchedule(int charterSchoolUid, string grade, int year)
         {
             //TODO: test all scenarios to make sure grade comparison is working here.
@@ -99,6 +100,27 @@ namespace SchoolDistrictBilling.Data
                                                      s.FirstDay.Date <= lastDayOfMonth &&
                                                      s.LastDay.Date >= firstDayOfMonth)
                                          .ToList();
+        }
+
+        // Given a START OF SCHOOL year for reporting, get the earliest first day of school across all charter school schedules (for this school year).
+        public DateTime GetCharterSchoolEarliestFirstDayOfSchool(int charterSchoolUid, int year)
+        {
+            var schedules = CharterSchoolSchedules.Where(s => s.CharterSchoolUid == charterSchoolUid &&
+                                                              s.FirstDay.Year == year)
+                                                  .ToList();
+
+            if (schedules.Count == 0) return DateTime.Now;
+
+            DateTime firstDay = schedules[0].FirstDay;
+            foreach (var schedule in schedules)
+            {
+                if (schedule.FirstDay < firstDay)
+                {
+                    firstDay = schedule.FirstDay;
+                }
+            }
+
+            return firstDay;
         }
 
         // Get the date of the most recent report for the given report type / charter school / school district combination where it was sent to the SD.
