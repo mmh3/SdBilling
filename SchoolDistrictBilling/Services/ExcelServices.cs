@@ -863,7 +863,7 @@ namespace SchoolDistrictBilling.Services
 
             for (int i = 0; i < activeStudents.Count(); i++)
             {
-                AddStudent(context, sheet, students[i], i, criteria);
+                AddStudent(context, sheet, activeStudents[i], i, criteria);
             }
         }
 
