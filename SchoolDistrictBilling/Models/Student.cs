@@ -103,6 +103,16 @@ namespace SchoolDistrictBilling.Models
         [Display(Name = "School District")]
         public string Aun { get; set; }
 
+        public bool IsEmpty()
+        {
+            if (string.IsNullOrEmpty(Aun) && string.IsNullOrEmpty(FirstName) && string.IsNullOrEmpty(LastName) && string.IsNullOrEmpty(StateStudentNo))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         public void GetMonthlyAttendanceValue(AppDbContext context, int month, int year, out decimal spedAttendance, out decimal nonSpedAttendance)
         {
             var schedule = context.GetCharterSchoolSchedule(CharterSchoolUid, Grade, month, year);

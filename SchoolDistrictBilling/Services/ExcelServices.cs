@@ -337,7 +337,7 @@ namespace SchoolDistrictBilling.Services
                                 }
                             }
 
-                            if (columns.Count() > 0 && !isHeadersRow)
+                            if (columns.Count() > 0 && !isHeadersRow && !student.IsEmpty())
                             {
                                 Student existingStudent = context.Students.FirstOrDefault(s => s.StateStudentNo == student.StateStudentNo
                                                                                                 && s.CharterSchoolUid == student.CharterSchoolUid
