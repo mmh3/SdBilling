@@ -270,7 +270,7 @@ namespace SchoolDistrictBilling.Services
 
                                                 case "grade_level":
                                                     var grade = worksheet.Cells[i, j].Value.ToString();
-                                                    if (grade == "0")
+                                                    if (grade == "0" || grade == "KDG")
                                                     {
                                                         grade = "K";
                                                     }
