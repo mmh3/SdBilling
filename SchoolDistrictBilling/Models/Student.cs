@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using SchoolDistrictBilling.Data;
 
 namespace SchoolDistrictBilling.Models
@@ -111,6 +112,34 @@ namespace SchoolDistrictBilling.Models
             }
 
             return false;
+        }
+
+        public bool IsValid(AppDbContext context, out string errorMessage)
+        {
+            errorMessage = null;
+
+            // Student must have a state student number.
+            if (string.IsNullOrEmpty(StateStudentNo))
+            {
+                errorMessage = "No state student number provided.";
+                return false;
+            }
+
+            // First name and last name must have values
+            if (string.IsNullOrEmpty(FirstName) || string.IsNullOrEmpty(LastName))
+            {
+                errorMessage = "Student must have a first and last name specified.";
+                return false;
+            }
+
+            // Aun must be a valid Aun of a school district in the system.
+            if (!context.SchoolDistricts.Any(sd => sd.Aun == Aun))
+            {
+                errorMessage = "District of residence is not a value AUN number for a school district in the system.";
+                return false;
+            }
+
+            return true;
         }
 
         public void GetMonthlyAttendanceValue(AppDbContext context, int month, int year, out decimal spedAttendance, out decimal nonSpedAttendance)

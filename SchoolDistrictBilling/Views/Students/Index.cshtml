@@ -17,12 +17,24 @@
             <input type="hidden" asp-for="ImportCharterSchoolUid" />
         </div>
 
-        <div class="col-md-6">
+        <div class="col-md-4">
             <input type="file" name="files" multiple />
         </div>
 
-        <div class="col-md-2">
+        <div class="col-md-1">
             <input type="submit" value="Upload" />
+        </div>
+
+        <div class="col-md-3">
+            <!--<input type="button" asp-controller="Students" asp-action="GetImportResults" value="Download Last Import Results" /> -->
+            <button style="height:30px; border-width:1px; border-radius:3px;" asp-controller="Students" asp-action="GetImportResults">Download Last Import Results</button>
+        </div>
+    </div>
+    <div>
+        <div class="row form-group" style="@(@Model.ResultMessage?.Length > 0 ? "display:block" : "display:none")">
+            <div class="col-md-12 alert alert-danger">
+                @Model.ResultMessage
+            </div>
         </div>
     </div>
 </form>

@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 using SchoolDistrictBilling.Data;
 using SchoolDistrictBilling.Models;
 using SchoolDistrictBilling.Services;
@@ -14,10 +17,12 @@ namespace SchoolDistrictBilling.Controllers
 {
     public class StudentsController : Controller
     {
+        private IWebHostEnvironment _hostEnvironment;
         private readonly AppDbContext _context;
 
-        public StudentsController(AppDbContext db)
+        public StudentsController(IWebHostEnvironment environment, AppDbContext db)
         {
+            _hostEnvironment = environment;
             _context = db;
         }
 
@@ -180,9 +185,41 @@ namespace SchoolDistrictBilling.Controllers
                 }
             }
 
-            ExcelServices.ImportStudents(_context, fileNames, ImportCharterSchoolUid);
+            ExcelServices.ImportStudents(_context, fileNames, ImportCharterSchoolUid, out ExcelPackage resultFile);
 
-            return RedirectToAction(nameof(Index));
+            if (resultFile == null)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+            else
+            {
+                string resultFileName = Path.Combine(new string[] { _hostEnvironment.WebRootPath, "reports", "StudentImportResult.xlsx" });
+                resultFile.SaveAs(new FileInfo(resultFileName));
+
+                var view = new StudentIndexView(_context);
+                view.ResultMessage = "Some students were not imported because of invalid data. Please click the button to download the result file with specific error messages.";
+                return View("Index", view);
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetImportResults()
+        {
+            string resultFileName = Path.Combine(new string[] { _hostEnvironment.WebRootPath, "reports", "StudentImportResult.xlsx" });
+            List<string> resultFiles = new List<string>();
+            resultFiles.Add(resultFileName);
+
+            var archive = _hostEnvironment.WebRootPath + "/archive.zip";
+            var temp = Directory.CreateDirectory(_hostEnvironment.WebRootPath + "/temp");
+            if (System.IO.File.Exists(archive))
+            {
+                System.IO.File.Delete(archive);
+            }
+            Directory.EnumerateFiles(temp.FullName).ToList().ForEach(f => System.IO.File.Delete(f));
+            resultFiles.ToList().ForEach(f => System.IO.File.Copy(f, Path.Combine(temp.FullName, Path.GetFileName(f))));
+            ZipFile.CreateFromDirectory(temp.FullName, archive);
+
+            return File("/archive.zip", "application/zip", "StudentImportResult.zip");
         }
     }
 }

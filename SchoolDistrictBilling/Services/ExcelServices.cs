@@ -153,8 +153,11 @@ namespace SchoolDistrictBilling.Services
             return rates;
         }
 
-        public static List<Student> ImportStudents(AppDbContext context, List<string> fileNames, int charterSchoolUid)
+        public static List<Student> ImportStudents(AppDbContext context, List<string> fileNames, int charterSchoolUid, out ExcelPackage resultFile)
         {
+            int validationErrorCount = 0;
+            resultFile = null;
+            ExcelWorksheet resultSheet = null;
             List<Student> students = new List<Student>();
 
             foreach (var fileName in fileNames)
@@ -339,17 +342,36 @@ namespace SchoolDistrictBilling.Services
 
                             if (columns.Count() > 0 && !isHeadersRow && !student.IsEmpty())
                             {
-                                Student existingStudent = context.Students.FirstOrDefault(s => s.StateStudentNo == student.StateStudentNo
-                                                                                                && s.CharterSchoolUid == student.CharterSchoolUid
-                                                                                                && s.Aun == student.Aun);
-                                if (existingStudent == null)
+                                if (student.IsValid(context, out string studentValidationMessage))
                                 {
-                                    if (string.IsNullOrEmpty(student.Aun)) student.Aun = "0";
-                                    context.Students.Add(student);
+                                    Student existingStudent = context.Students.FirstOrDefault(s => s.StateStudentNo == student.StateStudentNo
+                                                                                                    && s.CharterSchoolUid == student.CharterSchoolUid
+                                                                                                    && s.Aun == student.Aun);
+                                    if (existingStudent == null)
+                                    {
+                                        if (string.IsNullOrEmpty(student.Aun)) student.Aun = "0";
+                                        context.Students.Add(student);
+                                    }
+                                    else
+                                    {
+                                        existingStudent.CopyPropertiesFrom(student);
+                                    }
                                 }
-                                else
+                                else  // If the student data is not valid, add a record to the import result file that will be downloaded at the end of the process.
                                 {
-                                    existingStudent.CopyPropertiesFrom(student);
+                                    if (resultFile == null)
+                                    {
+                                        resultFile = new ExcelPackage();
+                                        resultSheet = resultFile.Workbook.Worksheets.Add("Sheet1");
+                                        resultSheet.Cells["A1"].Value = "Import Row #";
+                                        resultSheet.Cells["B1"].Value = "State Student #";
+                                        resultSheet.Cells["C1"].Value = "Error Message";
+                                    }
+                                    validationErrorCount++;
+                                    resultSheet.Cells["A" + (validationErrorCount + 1).ToString()].Value = i;
+                                    resultSheet.Cells["B" + (validationErrorCount + 1).ToString()].Value = student.StateStudentNo;
+                                    resultSheet.Cells["C" + (validationErrorCount + 1).ToString()].Value = studentValidationMessage;
+                                    resultSheet.Cells.AutoFitColumns();
                                 }
                             }
                         }

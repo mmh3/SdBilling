@@ -31,5 +31,7 @@ namespace SchoolDistrictBilling.Models
         public List<StudentView> Students { get; set; }
         public List<CharterSchool> ImportCharterSchools { get; set; }
         public int ImportCharterSchoolUid { get; set; }
+
+        public string ResultMessage { get; set; }
     }
 }
