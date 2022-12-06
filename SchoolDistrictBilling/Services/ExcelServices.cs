@@ -220,25 +220,38 @@ namespace SchoolDistrictBilling.Services
                                             switch (columns[j - 1].ToLower())
                                             {
                                                 case "state_studentnumber":
+                                                case "state student number":
+                                                case "state_student_number":
+                                                case "state studentnumber":
                                                     student.StateStudentNo = worksheet.Cells[i, j].Value.ToString();
                                                     break;
 
                                                 case "districtofresidence":
+                                                case "district of residence":
+                                                case "district_of_residence":
                                                     student.Aun = worksheet.Cells[i, j].Value.ToString(); ;
                                                     break;
 
                                                 case "first name":
+                                                case "first_name":
+                                                case "first":
                                                     student.FirstName = worksheet.Cells[i, j].Value.ToString();
                                                     break;
 
                                                 case "last name":
+                                                case "last_name":
+                                                case "last":
                                                     student.LastName = worksheet.Cells[i, j].Value.ToString();
                                                     break;
 
                                                 case "lastfirst":
                                                     var fullName = worksheet.Cells[i, j].Value.ToString();
-                                                    student.LastName = fullName.Split(",")[0];
-                                                    student.FirstName = fullName.Split(",")[1];
+
+                                                    if (!string.IsNullOrEmpty(fullName))
+                                                    {
+                                                        student.LastName = fullName.Split(",")[0];
+                                                        student.FirstName = fullName.Split(",")[1];
+                                                    }
                                                     break;
 
                                                 case "street":
@@ -272,6 +285,8 @@ namespace SchoolDistrictBilling.Services
                                                     break;
 
                                                 case "grade_level":
+                                                case "grade level":
+                                                case "grade":
                                                     var grade = worksheet.Cells[i, j].Value.ToString();
                                                     if (grade == "0" || grade == "KDG")
                                                     {
@@ -281,6 +296,8 @@ namespace SchoolDistrictBilling.Services
                                                     break;
 
                                                 case "districtentrydate":
+                                                case "district entry date":
+                                                case "district_entry_date":
                                                 case "vsims start date/date new district":
                                                     var entryDate = worksheet.Cells[i, j].Value.ToString();
                                                     if (entryDate == "0/0/0") entryDate = "01/01/0001";
@@ -297,6 +314,7 @@ namespace SchoolDistrictBilling.Services
                                                     break;
 
                                                 case "exit date":
+                                                case "exit_date":
                                                     DateTime exitDate;
                                                     if (DateTime.TryParse(worksheet.Cells[i, j].Value.ToString(), out exitDate))
                                                     {
@@ -311,7 +329,9 @@ namespace SchoolDistrictBilling.Services
                                                     break;
 
                                                 case "current iep date":
+                                                case "current_iep_date":
                                                 case "current iep":
+                                                case "current_iep":
                                                     DateTime currentIep;
                                                     if (DateTime.TryParse(worksheet.Cells[i, j].Value.ToString(), out currentIep))
                                                     {
@@ -320,7 +340,13 @@ namespace SchoolDistrictBilling.Services
                                                     break;
 
                                                 case "prior iep date":
+                                                case "prior_iep_date":
+                                                case "prior iep":
+                                                case "prior_iep":
                                                 case "previous iep":
+                                                case "previous_iep":
+                                                case "previous iep date":
+                                                case "previous_iep_date":
                                                     DateTime priorIep;
                                                     if (DateTime.TryParse(worksheet.Cells[i, j].Value.ToString(), out priorIep))
                                                     {
