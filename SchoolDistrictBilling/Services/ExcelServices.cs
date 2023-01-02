@@ -580,7 +580,8 @@ namespace SchoolDistrictBilling.Services
             //    w.WriteLine("{0}", "GenerateMonthlyInvoice");
             //}
 
-            var charterSchoolName = context.CharterSchools.Find(criteria.CharterSchoolUid).Name;
+            var charterSchool = context.CharterSchools.Find(criteria.CharterSchoolUid);
+            var charterSchoolName = charterSchool.Name;
             var headerDateRange = "For the Months of July " + DateServices.GetStartYear(criteria.Month, criteria.Year) + " to " + criteria.Month + " " + criteria.Year;
 
             if (criteria.SendTo == SubmitTo.PDE.ToString())
@@ -606,6 +607,13 @@ namespace SchoolDistrictBilling.Services
                 invoiceSheet.Cells["H1"].Value = charterSchoolName;
                 invoiceSheet.Cells["H4"].Value = headerDateRange;
                 PopulatePrepDates(invoiceSheet, criteria.SendTo, "N6");
+
+                // Set charter school information, including Remit To w/ address
+                invoiceSheet.Cells["L1"].Value = "Remit To:";
+                invoiceSheet.Cells["M1"].Value = charterSchool.Name;
+                invoiceSheet.Cells["M2"].Value = charterSchool.AddressStreet;
+                invoiceSheet.Cells["M3"].Value = charterSchool.AddressCity + ", " + charterSchool.AddressState + " " + charterSchool.AddressZip;
+                invoiceSheet.Cells["M4"].Value = charterSchool.Phone;
 
                 if (criteria.SendTo == SubmitTo.PDE.ToString())
                 {
