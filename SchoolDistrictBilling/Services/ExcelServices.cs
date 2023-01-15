@@ -915,7 +915,7 @@ namespace SchoolDistrictBilling.Services
 
             DateTime firstDayOfSchool = context.GetCharterSchoolEarliestFirstDayOfSchool(criteria.CharterSchoolUid, int.Parse(DateServices.GetStartYear(criteria.Month, criteria.Year)));
             var activeStudents = students.Where(s => s.ExitDate == null || s.ExitDate > firstDayOfSchool)
-                                         .ToList();
+                                         .OrderBy(s => s.LastName).ThenBy(s => s.FirstName).ToList();
 
             for (int i = 0; i < activeStudents.Count(); i++)
             {
