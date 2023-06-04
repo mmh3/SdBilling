@@ -441,6 +441,13 @@ namespace SchoolDistrictBilling.Services
                 reconSheet.Cells["E1"].Value = charterSchoolName;
                 PopulatePrepDates(reconSheet, criteria.SendTo, "H5");
 
+                // Set charter school information, including Remit To w/ address
+                reconSheet.Cells["G1"].Value = "Remit To:";
+                reconSheet.Cells["H1"].Value = charterSchool.Name;
+                reconSheet.Cells["H2"].Value = charterSchool.AddressStreet;
+                reconSheet.Cells["H3"].Value = charterSchool.AddressCity + ", " + charterSchool.AddressState + " " + charterSchool.AddressZip;
+                reconSheet.Cells["H4"].Value = charterSchool.Phone;
+
                 // Get the list of school district AUNs we're reconciling.
                 var sdAuns = context.GetAunsForCharterSchool(criteria.CharterSchoolUid);
 
