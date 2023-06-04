@@ -26,7 +26,7 @@ namespace SchoolDistrictBilling.Data
         // Get the list of school district AUNs for a given charter school.
         public List<string> GetAunsForCharterSchool(int charterSchoolUid)
         {
-            return Students.Where(s => s.CharterSchoolUid == charterSchoolUid)
+            return Students.Where(s => s.CharterSchoolUid == charterSchoolUid && s.Aun != "0")
                            .Select(x => x.Aun)
                            .Distinct()
                            .ToList();
