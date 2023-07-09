@@ -222,9 +222,40 @@ namespace SchoolDistrictBilling.Models
             }
             else
             {
-                //TODO: Account for scenario where student entered and exited within the month!!!
+                // Student entered and exited mid period
+                if (DistrictEntryDate > startDate && ExitDate < endDate)
+                {
+                    if (IsSpedOnDate((DateTime)DistrictEntryDate) == IsSpedOnDate((DateTime)ExitDate))
+                    {
+                        if (IsSpedOnDate((DateTime)DistrictEntryDate))
+                        {
+                            spedDays = schedule.GetSchoolDays(context, (DateTime)DistrictEntryDate, (DateTime)ExitDate);
+                            spedAttendanceAdm = decimal.Round(spedDays / daysInSession, 3);
+
+                            nonSpedDays = nonSpedAttendanceAdm = 0;
+                        }
+                        else
+                        {
+                            spedDays = spedAttendanceAdm = 0;
+
+                            nonSpedDays = schedule.GetSchoolDays(context, (DateTime)DistrictEntryDate, (DateTime)ExitDate);
+                            nonSpedAttendanceAdm = decimal.Round(nonSpedDays / daysInSession, 3);
+                        }
+                    }
+                    else
+                    {
+                        //TODO: Handle the situation where the student exited sped during the month - will this
+                        // be based on a sped exit date field or the prior IEP just expiring after a year?
+                        spedDays = schedule.GetSchoolDays(context, (DateTime)CurrentIepDate, (DateTime)ExitDate);
+                        spedAttendanceAdm = decimal.Round(spedDays / daysInSession, 3);
+
+                        // Calculate non-sped up to the date before the IEP start date.
+                        nonSpedDays = schedule.GetSchoolDays(context, (DateTime)DistrictEntryDate, ((DateTime)CurrentIepDate).AddDays(-1));
+                        nonSpedAttendanceAdm = decimal.Round(nonSpedDays / daysInSession, 3);
+                    }
+                }
                 // Student started mid-month
-                if (DistrictEntryDate >= startDate)
+                else if (DistrictEntryDate > startDate)
                 {
                     if (IsSpedOnDate(startDate) == IsSpedOnDate(endDate))
                     {
