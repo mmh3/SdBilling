@@ -940,7 +940,7 @@ namespace SchoolDistrictBilling.Services
             {
                 var copyStartRow = (sheetNum * 44 + 1).ToString();
                 var copyEndRow = (sheetNum * 44 + 93).ToString();
-                sheet.Cells["A1:K44"].Copy(sheet.Cells["A" + copyStartRow + ":K" + copyEndRow]);
+                sheet.Cells["A1:L44"].Copy(sheet.Cells["A" + copyStartRow + ":L" + copyEndRow]);
                 ClearAndFormatCopiedSheet(sheet, sheetNum);
             }
 
@@ -1021,6 +1021,8 @@ namespace SchoolDistrictBilling.Services
                 sheet.Cells["J" + secondRow].Value = string.Empty;
                 sheet.Cells["K" + secondRow].Value = string.Empty;
                 sheet.Cells["K" + fourthRow].Value = string.Empty;
+                sheet.Cells["L" + secondRow].Value = string.Empty;
+                sheet.Cells["L" + fourthRow].Value = string.Empty;
             }
         }
 
