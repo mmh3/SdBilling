@@ -5,91 +5,120 @@
 }
 @* <h1>@ViewData["Title"]</h1> *@
 
-<h2>Students</h2>
-<hr />
-<h4>Import Students</h4>
-<form method="post" enctype="multipart/form-data" asp-controller="Students" asp-action="ImportStudents">
-    <div class="row form-group">
-        <div class="col-md-4">
-            <select id="drpSchool" class="form-control" asp-for="ImportCharterSchoolUid" asp-items="@(new SelectList(Model.ImportCharterSchools, "CharterSchoolUid", "Name"))">
-                <option value="">--Select--</option>
-            </select>
-            <input type="hidden" asp-for="ImportCharterSchoolUid" />
-        </div>
+<!DOCTYPE html>
 
-        <div class="col-md-4">
-            <input type="file" name="files" multiple />
-        </div>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <div class="col-md-1">
-            <input type="submit" value="Upload" />
-        </div>
+    <!-- CSS Includes -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.css" />
+</head>
 
-        <div class="col-md-3">
-            <!--<input type="button" asp-controller="Students" asp-action="GetImportResults" value="Download Last Import Results" /> -->
-            <button style="height:30px; border-width:1px; border-radius:3px;" asp-controller="Students" asp-action="GetImportResults">Download Last Import Results</button>
-        </div>
-    </div>
-    <div>
-        <div class="row form-group" style="@(@Model.ResultMessage?.Length > 0 ? "display:block" : "display:none")">
-            <div class="col-md-12 alert alert-danger">
-                @Model.ResultMessage
+<body style="margin-bottom:60px;">
+    <h2>Students</h2>
+    <hr />
+    <h4>Import Students</h4>
+    <form method="post" enctype="multipart/form-data" asp-controller="Students" asp-action="ImportStudents">
+        <div class="row form-group">
+            <div class="col-md-4">
+                <select id="drpSchool" class="form-control" asp-for="ImportCharterSchoolUid" asp-items="@(new SelectList(Model.ImportCharterSchools, "CharterSchoolUid", "Name"))">
+                    <option value="">--Select--</option>
+                </select>
+                <input type="hidden" asp-for="ImportCharterSchoolUid" />
+            </div>
+
+            <div class="col-md-4">
+                <input type="file" name="files" multiple />
+            </div>
+
+            <div class="col-md-1">
+                <input type="submit" value="Upload" />
+            </div>
+
+            <div class="col-md-3">
+                <!--<input type="button" asp-controller="Students" asp-action="GetImportResults" value="Download Last Import Results" /> -->
+                <button style="height:30px; border-width:1px; border-radius:3px;" asp-controller="Students" asp-action="GetImportResults">Download Last Import Results</button>
             </div>
         </div>
-    </div>
-</form>
+        <div>
+            <div class="row form-group" style="@(@Model.ResultMessage?.Length > 0 ? "display:block" : "display:none")">
+                <div class="col-md-12 alert alert-danger">
+                    @Model.ResultMessage
+                </div>
+            </div>
+        </div>
+    </form>
 
-<hr />
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Students.First().Student.StudentUid)
-            </th>
-            <th>
-                @*@Html.DisplayNameFor(model => model.CharterSchool.Name)*@
-                Charter School
-            </th>
-            <th>
-                @*@Html.DisplayNameFor(model => model.SchoolDistrict.Name)*@
-                School District
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Students.First().Student.LastName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Students.First().Student.FirstName)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model.Students)
-        {
+    <hr />
+    <p>
+        <a asp-action="Create">Create New</a>
+    </p>
+    <table id="dataTable" class="table">
+        <thead>
             <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Student.StudentUid)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.CharterSchool.Name)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.SchoolDistrict.Name)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Student.LastName)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Student.FirstName)
-                </td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.Student.StudentUid">Edit</a> |
-                    <a asp-action="Delete" asp-route-id="@item.Student.StudentUid">Delete</a>
-                </td>
+                <th>
+                    @Html.DisplayNameFor(model => model.Students.First().Student.StudentUid)
+                </th>
+                <th>
+                    @*@Html.DisplayNameFor(model => model.CharterSchool.Name)*@
+                    Charter School
+                    @*<select id="schoolFilter" class="form-control" asp-items="@(new SelectList(Model.ImportCharterSchools, "CharterSchoolUid", "Name"))"><option value="">--All Charter Schools--</option></select>*@
+                </th>
+                <th>
+                    @*@Html.DisplayNameFor(model => model.SchoolDistrict.Name)*@
+                    School District
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Students.First().Student.LastName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Students.First().Student.FirstName)
+                </th>
+                <th></th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+    </table>
+</body>
+</html>
+
+@section Scripts {
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.js"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var modelData = @Html.Raw(Json.Serialize(Model.Students));
+            console.log(modelData);
+
+            // Initialize DataTable
+            var dataTable = $('#dataTable').DataTable({
+                filter: true,
+                pageLength: 100,
+                orderMulti: false,
+                data: modelData,
+                columnDefs: [
+                    {
+                        targets: [5],
+                        searchable: false,
+                        orderable: false
+                    }
+                ],
+                columns: [
+                    { data: 'student.stateStudentNo' },
+                    { data: 'charterSchool.name' },
+                    { data: 'schoolDistrict.name' },
+                    { data: 'student.lastName' },
+                    { data: 'student.firstName' },
+                    {
+                        "render": function (data, type, full, meta) {
+                            return '<a href="/Students/Edit/' + full.student.studentUid + '">Edit</a> | <a href="/Students/Delete/' + full.student.studentUid + '">Delete</a>';
+                        }
+                    }
+                ]
+            });
+        });</script>
+}
