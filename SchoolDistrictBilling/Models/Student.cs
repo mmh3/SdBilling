@@ -139,6 +139,28 @@ namespace SchoolDistrictBilling.Models
                 return false;
             }
 
+            // Student must have a valid grade.
+            string[] validGrades = { "K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12" };
+            if (string.IsNullOrEmpty(Grade) || !validGrades.Contains(Grade))
+            {
+                errorMessage = "Student must have a valid grade specified.";
+                return false;
+            }
+
+            // Student must have a DOB.
+            if (Dob == null || DateTime.Compare(Dob.Value, DateTime.Parse("01/01/0001")) != 0)
+            {
+                errorMessage = "Student must have a valid date of birth.";
+                return false;
+            }
+
+            // Student must have a district entry date.
+            if (DistrictEntryDate == null || DateTime.Compare(DistrictEntryDate.Value, DateTime.Parse("01/01/0001")) != 0)
+            {
+                errorMessage = "Student must have a valid district entry date specified.";
+                return false;
+            }
+
             return true;
         }
 
