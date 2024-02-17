@@ -148,14 +148,14 @@ namespace SchoolDistrictBilling.Models
             }
 
             // Student must have a DOB.
-            if (Dob == null || DateTime.Compare(Dob.Value, DateTime.Parse("01/01/0001")) != 0)
+            if (Dob == null || DateTime.Compare(Dob.Value, DateTime.Parse("01/01/0001")) == 0)
             {
                 errorMessage = "Student must have a valid date of birth.";
                 return false;
             }
 
             // Student must have a district entry date.
-            if (DistrictEntryDate == null || DateTime.Compare(DistrictEntryDate.Value, DateTime.Parse("01/01/0001")) != 0)
+            if (DistrictEntryDate == null || DateTime.Compare(DistrictEntryDate.Value, DateTime.Parse("01/01/0001")) == 0)
             {
                 errorMessage = "Student must have a valid district entry date specified.";
                 return false;
