@@ -172,6 +172,26 @@ namespace SchoolDistrictBilling.Models
                 throw new Exception("Student " + StateStudentNo + " does not have a district entry date.");
             }
 
+            // July is a special case since the school year won't have started yet based on the schedule. If the student started before the start date
+            // and exited after the end date, count them as a 1.
+            if (startDate.Month == 7 && endDate.Month == 7 && startDate.Year == endDate.Year)
+            {
+                spedAttendanceAdm = nonSpedAttendanceAdm = spedDays = nonSpedDays = daysInSession = 0;
+                if (DistrictEntryDate <= startDate && (ExitDate > endDate || ExitDate is null))
+                {
+                    if (IsSpedOnDate(startDate))
+                    {
+                        spedAttendanceAdm = 1;
+                    }
+                    else
+                    {
+                        nonSpedAttendanceAdm = 1;
+                    }
+                }
+
+                return;
+            }
+
             if (schedule == null)
             {
                 spedAttendanceAdm = nonSpedAttendanceAdm = spedDays = nonSpedDays = daysInSession = 0;
