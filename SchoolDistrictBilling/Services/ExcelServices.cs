@@ -1066,6 +1066,10 @@ namespace SchoolDistrictBilling.Services
             {
                 student.GetMonthlyAttendanceValue(context, month, year, out decimal spedAttendance, out decimal nonSpedAttendance);
 
+                //Per email from Keisha on 2/4/25, monthly invoices should only use whole numbers for attendance. Decimals will only be used in EOY reconciliation.
+                spedAttendance = Math.Ceiling(spedAttendance);
+                nonSpedAttendance = Math.Ceiling(nonSpedAttendance);
+
                 spedStudents += spedAttendance;
                 nonSpedStudents += nonSpedAttendance;
             }
