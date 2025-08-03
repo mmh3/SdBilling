@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SchoolDistrictBilling.Services
 {
@@ -6,15 +8,28 @@ namespace SchoolDistrictBilling.Services
     {
         public static string GetStartYear(string month, string currentYear)
         {
-            var secondHalfMonths = new List<string> { "July", "August", "September", "October", "November", "December" };
-            if (secondHalfMonths.Contains(month))
+            if (string.IsNullOrEmpty(month) || string.IsNullOrEmpty(currentYear))
+            {
+                throw new ArgumentException("Month and current year cannot be null or empty");
+            }
+
+            if (!int.TryParse(currentYear, out int year))
+            {
+                throw new ArgumentException("Invalid year format");
+            }
+
+            var secondHalfMonths = new List<string> 
+            { 
+                "July", "August", "September", "October", "November", "December" 
+            };
+
+            // Case-insensitive comparison
+            if (secondHalfMonths.Contains(month, StringComparer.OrdinalIgnoreCase))
             {
                 return currentYear;
             }
-            else
-            {
-                return (int.Parse(currentYear) - 1).ToString();
-            }
+            
+            return (year - 1).ToString();
         }
     }
 }
