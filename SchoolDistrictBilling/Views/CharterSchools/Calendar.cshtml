@@ -113,7 +113,8 @@
 
                         axios({
                             method: 'post',
-                            url: '/CharterSchools/GetCalendarEvents',
+                            //url: '/sdbilling-test/CharterSchools/GetCalendarEvents',
+                            url: '@Url.Action("GetCalendarEvents", "CharterSchools")',
                             data: {
                                 "Title": view.title,
                                 "CharterSchoolScheduleUid": @Model.CurrentScheduleUid
@@ -137,7 +138,8 @@
                     select: function (start, end, jsEvent, view) {
                         axios({
                             method: 'post',
-                            url: '/CharterSchools/AddCalendarEvent',
+                            //url: '/sdbilling-test/CharterSchools/AddCalendarEvent',
+                            url: '@Url.Action("GetCalendarEvents", "CharterSchools")',
                             data: {
                                 "CharterSchoolScheduleUid": @Model.CurrentScheduleUid,
                                 "Title": "Holiday",
@@ -180,7 +182,8 @@
                         console.log(event);
                         axios({
                             method: 'post',
-                            url: '/CharterSchools/RemoveCalendarEvent',
+                            //url: '/sdbilling-test/CharterSchools/RemoveCalendarEvent',
+                            url: '@Url.Action("GetCalendarEvents", "CharterSchools")',
                             data: {
                                 "EventId": event.EventId ?? event.eventId
                             }
