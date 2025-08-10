@@ -24,6 +24,7 @@ namespace SchoolDistrictBilling.Models
         public List<string> YearEndYears { get; set; } = new List<string> { "2021-2022", "2022-2023", "2023-2024", "2024-2025", "2025-2026", "2026-2027", "2027-2028", "2028-2029", "2029-2030" };
         public string CurrentMonth { get; set; } = DateTime.Now.ToString("MMMM");
         public string CurrentYear { get; set; } = DateTime.Now.ToString("yyyy");
+        public string CurrentYearEndYear { get; set; } = DateTime.Now.AddYears(-1).ToString("yyyy") + "-" + DateTime.Now.ToString("yyyy");
         [Display(Name ="Charter School")]
         public int CharterSchoolUid { get; set; }
         [Display(Name = "Submit To")]
