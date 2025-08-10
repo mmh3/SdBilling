@@ -10,6 +10,7 @@
         PdeStudentList,
         PdeDirectPayment,
         PdeTuitionRate,
-        PdeStudentListReconciliation
+        PdeStudentListReconciliation,
+        DaysAttended
     }
 }

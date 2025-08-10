@@ -10,6 +10,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Configuration;
 
 namespace SchoolDistrictBilling.Controllers
 {
@@ -17,11 +18,13 @@ namespace SchoolDistrictBilling.Controllers
     {
         private IWebHostEnvironment _hostEnvironment;
         private readonly AppDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public YearEndReconController(IWebHostEnvironment environment, AppDbContext db)
+        public YearEndReconController(IWebHostEnvironment environment, AppDbContext db, IConfiguration configuration)
         {
             _hostEnvironment = environment;
             _context = db;
+            _configuration = configuration;
         }
 
         // GET: YearEndRecon
@@ -60,7 +63,7 @@ namespace SchoolDistrictBilling.Controllers
             criteria.Year = criteria.Year.Split("-")[1];
 
             //open the template
-            var files = ExcelServices.GenerateYearEndRecon(_context, _hostEnvironment.WebRootPath, criteria);
+            var files = ExcelServices.GenerateYearEndRecon(_context, _hostEnvironment.WebRootPath, criteria, _configuration);
             await _context.SaveChangesAsync();
 
             //alter data

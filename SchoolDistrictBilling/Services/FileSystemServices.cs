@@ -58,6 +58,9 @@ namespace SchoolDistrictBilling.Services
                 case FileType.PdeStudentListReconciliation:
                     return Path.Combine(outputFilePath, criteria.Year + Regex.Replace(charterSchoolName, @"\s+", "") + "PdeCsrStudentListRecon.xlsx");
 
+                case FileType.DaysAttended:
+                    return Path.Combine(outputFilePath, criteria.Year + Regex.Replace(schoolDistrictName, @"\s+", "") + "DaysAttended.xlsx");
+
                 default:
                     throw new Exception("Invalid report type passed to GetReportFileName.");
             }
@@ -65,7 +68,7 @@ namespace SchoolDistrictBilling.Services
 
         public static string GetReportPath(FileType type, string rootPath, ReportCriteriaView criteria, string charterSchoolName)
         {
-            if (type == FileType.YearEnd || type == FileType.PdeStudentListReconciliation)
+            if (type == FileType.YearEnd || type == FileType.PdeStudentListReconciliation || type == FileType.DaysAttended)
             {
                 return Path.Combine(new string[] { rootPath, "reports", Regex.Replace(charterSchoolName, @"\s+", ""), criteria.Year });
             }

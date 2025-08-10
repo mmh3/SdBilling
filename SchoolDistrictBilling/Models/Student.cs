@@ -164,13 +164,13 @@ namespace SchoolDistrictBilling.Models
             return true;
         }
 
-        public void GetMonthlyAttendanceValue(AppDbContext context, int month, int year, out decimal spedAttendance, out decimal nonSpedAttendance)
+        public void GetMonthlyAttendanceValue(AppDbContext context, int month, int year, out decimal spedAttendance, out decimal nonSpedAttendance, out decimal spedDays, out decimal nonSpedDays, out decimal daysInSession)
         {
             var schedule = context.GetCharterSchoolSchedule(CharterSchoolUid, Grade, month, year);
             DateTime firstDayOfMonth = new DateTime(year, month, 1);
             DateTime lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1).Date.AddHours(23).AddMinutes(59).AddSeconds(59);
             
-            GetPeriodAttendanceValues(context, schedule, firstDayOfMonth, lastDayOfMonth, out spedAttendance, out decimal spedDays, out nonSpedAttendance, out decimal nonSpedDays, out decimal daysInSession);
+            GetPeriodAttendanceValues(context, schedule, firstDayOfMonth, lastDayOfMonth, out spedAttendance, out spedDays, out nonSpedAttendance, out nonSpedDays, out daysInSession);
         }
 
         public void GetYearlyAttendanceValue(AppDbContext context, int year, out decimal spedAttendance, out decimal nonSpedAttendance)

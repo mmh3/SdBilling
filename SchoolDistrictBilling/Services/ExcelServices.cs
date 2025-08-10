@@ -10,6 +10,7 @@ using OfficeOpenXml.Style;
 using SchoolDistrictBilling.Data;
 using SchoolDistrictBilling.Models;
 using SchoolDistrictBilling.Reports;
+using Microsoft.Extensions.Configuration;
 
 namespace SchoolDistrictBilling.Services
 {
@@ -410,7 +411,7 @@ namespace SchoolDistrictBilling.Services
             return students;
         }
 
-        public static IEnumerable<string> GenerateYearEndRecon(AppDbContext context, string rootPath, ReportCriteriaView criteria)
+        public static IEnumerable<string> GenerateYearEndRecon(AppDbContext context, string rootPath, ReportCriteriaView criteria, IConfiguration configuration)
         {
             criteria.IsYearEndRecon = true;
             criteria.Month = "May";
@@ -498,6 +499,16 @@ namespace SchoolDistrictBilling.Services
                         var reconStudentFile = SaveExcelFile(FileType.ReconStudent, student, rootPath, criteria, charterSchoolName, schoolDistrictName);
                         fileNames.Add(reconStudentFile.FullName);
                     }
+
+                    // Generate Days Attended Report (if enabled in configuration)
+                    var generateDaysAttendedReport = configuration.GetValue<bool>("ReportSettings:GenerateDaysAttendedReport", false);
+                    if (generateDaysAttendedReport)
+                    {
+                        var daysAttendedReport = new DaysAttendedReport(context, rootPath);
+                        var daysAttendedFile = daysAttendedReport.Generate(criteria, schoolDistrictName);
+                        fileNames.Add(daysAttendedFile);
+                    }
+
                     ///////////////////////////////////
 
 
@@ -1064,7 +1075,7 @@ namespace SchoolDistrictBilling.Services
 
             foreach (var student in students)
             {
-                student.GetMonthlyAttendanceValue(context, month, year, out decimal spedAttendance, out decimal nonSpedAttendance);
+                student.GetMonthlyAttendanceValue(context, month, year, out decimal spedAttendance, out decimal nonSpedAttendance, out decimal spedDays, out decimal nonSpedDays, out decimal daysInSession);
 
                 //Per email from Keisha on 2/4/25, monthly invoices should only use whole numbers for attendance. Decimals will only be used in EOY reconciliation.
                 spedAttendance = Math.Ceiling(spedAttendance);
