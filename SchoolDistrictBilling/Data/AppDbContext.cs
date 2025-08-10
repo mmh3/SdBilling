@@ -32,6 +32,16 @@ namespace SchoolDistrictBilling.Data
                            .ToList();
         }
 
+        public List<string> GetAunsForCharterSchool(int charterSchoolUid, int year)
+        {
+            var firstDayOfSchool = GetCharterSchoolEarliestFirstDayOfSchool(charterSchoolUid, year);
+
+            return Students.Where(s => s.CharterSchoolUid == charterSchoolUid && s.Aun != "0" && (s.ExitDate == null || s.ExitDate > firstDayOfSchool))
+                           .Select(x => x.Aun)
+                           .Distinct()
+                           .ToList();
+        }
+
         // Get a list of the students for the given charter school and school district.
         public List<Student> GetStudents(int charterSchoolUid, string aun)
         {

@@ -449,8 +449,10 @@ namespace SchoolDistrictBilling.Services
                 reconSheet.Cells["H3"].Value = charterSchool.AddressCity + ", " + charterSchool.AddressState + " " + charterSchool.AddressZip;
                 reconSheet.Cells["H4"].Value = charterSchool.Phone;
 
-                // Get the list of school district AUNs we're reconciling.
-                var sdAuns = context.GetAunsForCharterSchool(criteria.CharterSchoolUid);
+                // Get the list of school district AUNs we're reconciling. Use the overload version that takes the year so we only get 
+                // auns where a student attended during this year. Have to subtract 1 from the criteria year because the method needs the
+                // START year of the school year.
+                var sdAuns = context.GetAunsForCharterSchool(criteria.CharterSchoolUid, int.Parse(criteria.Year) - 1);
 
                 foreach (var aun in sdAuns)
                 {
