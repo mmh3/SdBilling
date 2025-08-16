@@ -642,7 +642,8 @@ namespace SchoolDistrictBilling.Services
                 invoiceSheet.Cells["N8"].Value = string.Empty;
 
                 // Get the list of school district AUNs we'll be billing - this will dictate the number of reports we're creating
-                var sdAuns = context.GetAunsForCharterSchool(criteria.CharterSchoolUid);
+                int invoiceMonthNo = DateTime.ParseExact(criteria.Month, "MMMM", CultureInfo.CurrentCulture).Month;
+                var sdAuns = context.GetAunsForCharterSchool(criteria.CharterSchoolUid, int.Parse(criteria.Year), invoiceMonthNo);
 
                 int unipayRow = 10;
                 foreach (var aun in sdAuns)
