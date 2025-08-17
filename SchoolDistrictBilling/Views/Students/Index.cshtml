@@ -116,7 +116,7 @@
                     {
                         "render": function (data, type, full, meta) {
                             //return '<a href="/sdbilling-test/Students/Edit/' + full.student.studentUid + '">Edit</a> | <a href="/sdbilling-test/Students/Delete/' + full.student.studentUid + '">Delete</a>';
-                            return '<a href="@Url.Action("Edit", "Students")/' + full.student.studentUid + '">Edit</a> | <a href="@Url.Action("Edit", "Students")/' + full.student.studentUid + '">Delete</a>';
+                            return '<a href="@Url.Action("Edit", "Students")/' + full.student.studentUid + '">Edit</a> | <a href="@Url.Action("Delete", "Students")/' + full.student.studentUid + '">Delete</a>';
                         }
                     }
                 ]

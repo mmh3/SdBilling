@@ -139,7 +139,7 @@
                         axios({
                             method: 'post',
                             //url: '/sdbilling-test/CharterSchools/AddCalendarEvent',
-                            url: '@Url.Action("GetCalendarEvents", "CharterSchools")',
+                            url: '@Url.Action("AddCalendarEvent", "CharterSchools")',
                             data: {
                                 "CharterSchoolScheduleUid": @Model.CurrentScheduleUid,
                                 "Title": "Holiday",
@@ -183,7 +183,7 @@
                         axios({
                             method: 'post',
                             //url: '/sdbilling-test/CharterSchools/RemoveCalendarEvent',
-                            url: '@Url.Action("GetCalendarEvents", "CharterSchools")',
+                            url: '@Url.Action("RemoveCalendarEvent", "CharterSchools")',
                             data: {
                                 "EventId": event.EventId ?? event.eventId
                             }
